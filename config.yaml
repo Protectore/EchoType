@@ -1,0 +1,9 @@
+server:
+  host: "localhost"
+  port: 8100
+  reload: false
+
+model:
+  size: "small"  # tiny, base, small, medium, large-v2, large-v3
+  device: "cuda"  # cpu or cuda
+  compute_type: "float16"  # int8, float16, float32

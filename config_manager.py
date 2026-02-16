@@ -141,6 +141,167 @@ class ConfigManager:
     def is_loaded(self) -> bool:
         """Проверка, загружена ли конфигурация"""
         return self._config is not None
+    
+    # === Методы для горячих клавиш ===
+    
+    def get_hotkeys(self) -> Dict[str, Any]:
+        """Получить все настройки горячих клавиш"""
+        return self.get('hotkeys', {})
+    
+    def get_hotkey(self, name: str) -> Dict[str, Any]:
+        """
+        Получить настройки конкретной горячей клавиши.
+        
+        Args:
+            name: Имя горячей клавиши (например, 'record')
+        
+        Returns:
+            Словарь с keys, mode, description
+        """
+        default_hotkey = {
+            'keys': 'alt_gr',
+            'mode': 'toggle',
+            'description': 'Запись голоса'
+        }
+        return self.get(f'hotkeys.{name}', default_hotkey)
+    
+    def get_hotkey_keys(self, name: str) -> str:
+        """Получить клавиши для горячей клавиши"""
+        return self.get(f'hotkeys.{name}.keys', 'alt_gr')
+    
+    def get_hotkey_mode(self, name: str) -> str:
+        """Получить режим горячей клавиши (toggle/ptt)"""
+        return self.get(f'hotkeys.{name}.mode', 'toggle')
+    
+    # === Методы для аудио ===
+    
+    def get_audio_sample_rate(self) -> int:
+        """Получить частоту дискретизации"""
+        return self.get('audio.sample_rate', 16000)
+    
+    def get_audio_channels(self) -> int:
+        """Получить количество каналов"""
+        return self.get('audio.channels', 1)
+    
+    def get_audio_device(self) -> Optional[int]:
+        """Получить ID устройства записи"""
+        return self.get('audio.device', None)
+    
+    # === Методы для клиента ===
+    
+    def get_output_mode(self) -> str:
+        """Получить режим вывода (clipboard/typein/both)"""
+        return self.get('client.output_mode', 'typein')
+    
+    def get_auto_paste(self) -> bool:
+        """Получить настройку авто-вставки Enter"""
+        return self.get('client.auto_paste', False)
+    
+    def get_add_space(self) -> bool:
+        """Получить настройку добавления пробела"""
+        return self.get('client.add_space', False)
+    
+    # === Методы для GUI ===
+    
+    def is_gui_enabled(self) -> bool:
+        """Проверить, включен ли GUI"""
+        return self.get('gui.enabled', True)
+    
+    def get_gui_language(self) -> str:
+        """Получить язык интерфейса"""
+        return self.get('gui.language', 'ru')
+    
+    def get_gui_settings(self) -> Dict[str, Any]:
+        """Получить все настройки GUI"""
+        defaults = {
+            'enabled': True,
+            'language': 'ru',
+            'show_popup': True,
+            'popup_position': 'cursor',
+            'show_timer': True,
+            'show_visualizer': True,
+            'minimize_to_tray': True,
+            'start_minimized': False,
+            'autostart': False
+        }
+        return self.get('gui', defaults)
+    
+    def show_popup(self) -> bool:
+        """Показывать ли popup при записи"""
+        return self.get('gui.show_popup', True)
+    
+    def get_popup_position(self) -> str:
+        """Получить позицию popup окна"""
+        return self.get('gui.popup_position', 'cursor')
+    
+    def show_timer(self) -> bool:
+        """Показывать ли таймер записи"""
+        return self.get('gui.show_timer', True)
+    
+    def show_visualizer(self) -> bool:
+        """Показывать ли визуализацию аудио"""
+        return self.get('gui.show_visualizer', True)
+    
+    def minimize_to_tray(self) -> bool:
+        """Сворачивать ли в трей при закрытии"""
+        return self.get('gui.minimize_to_tray', True)
+    
+    def start_minimized(self) -> bool:
+        """Запускать ли свернутым"""
+        return self.get('gui.start_minimized', False)
+    
+    def is_autostart_enabled(self) -> bool:
+        """Включен ли автозапуск"""
+        return self.get('gui.autostart', False)
+    
+    # === Методы для изменения конфигурации ===
+    
+    def set(self, key: str, value: Any) -> bool:
+        """
+        Установить значение конфигурации.
+        
+        Args:
+            key: Ключ конфигурации (например: 'gui.language')
+            value: Новое значение
+        
+        Returns:
+            True если значение установлено
+        """
+        if self._config is None:
+            self._config = {}
+        
+        keys = key.split('.')
+        data = self._config
+        
+        # Проходим по всем ключам кроме последнего
+        for k in keys[:-1]:
+            if k not in data:
+                data[k] = {}
+            data = data[k]
+        
+        # Устанавливаем значение
+        data[keys[-1]] = value
+        return True
+    
+    def save(self) -> bool:
+        """
+        Сохранить конфигурацию в файл.
+        
+        Returns:
+            True если сохранение успешно
+        """
+        if not self._config_path or not self._config:
+            return False
+        
+        try:
+            with open(self._config_path, 'w', encoding='utf-8') as f:
+                yaml.dump(self._config, f, default_flow_style=False, allow_unicode=True)
+            logging.info(f"✅ Конфигурация сохранена в {self._config_path}")
+            return True
+        except Exception as e:
+            logging.error(f"Ошибка сохранения конфигурации: {e}")
+            return False
+
 
 # Создаем глобальный экземпляр для удобного доступа
 config = ConfigManager()

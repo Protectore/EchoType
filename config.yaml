@@ -1,9 +1,31 @@
+audio:
+  channels: 1
+  device: null
+  sample_rate: 16000
+client:
+  add_space: false
+  auto_paste: false
+  output_mode: clipboard
+gui:
+  autostart: false
+  enabled: true
+  language: ru
+  minimize_to_tray: true
+  popup_position: cursor
+  show_popup: true
+  show_timer: true
+  show_visualizer: true
+  start_minimized: false
+hotkeys:
+  record:
+    description: Начать/остановить запись
+    keys: '*'
+    mode: toggle
+model:
+  compute_type: float16
+  device: cuda
+  size: medium
 server:
-  host: "localhost"
+  host: localhost
   port: 8100
   reload: false
-
-model:
-  size: "small"  # tiny, base, small, medium, large-v2, large-v3
-  device: "cuda"  # cpu or cuda
-  compute_type: "float16"  # int8, float16, float32

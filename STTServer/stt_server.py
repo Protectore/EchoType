@@ -9,6 +9,8 @@ from typing import Optional
 
 from config_manager import ConfigManager
 
+from logger import get_logger
+
 
 class STTServer:
     """
@@ -47,7 +49,7 @@ class STTServer:
             level=getattr(logging, log_level),
             format=self.config.get("logging.format", "%(asctime)s - %(levelname)s - %(message)s")
         )
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
     
     def _setup_routes(self):
         """Регистрация маршрутов FastAPI"""
@@ -67,6 +69,7 @@ class STTServer:
             """
             Принимает аудио файл, возвращает текст
             """
+            self.logger.info("Получен запрос на расшифровку аудио")
             # Загружаем модель при первом запросе (LazyLoading)
             if self.model is None:
                 self.logger.info("Loading Whisper model...")

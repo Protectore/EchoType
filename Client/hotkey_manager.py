@@ -39,8 +39,24 @@ class HotkeyAction:
 @dataclass
 class HotkeyState:
     """Состояние отслеживания клавиш"""
-    pressed_keys: Set[keyboard.Key | keyboard.KeyCode] = field(default_factory=set)
+    pressed_keys: Set[ keyboard.Key | keyboard.KeyCode] = field(default_factory=set)
     active_hotkey: Optional[str] = None
+
+    def add_key(self, key: keyboard.Key | keyboard.KeyCode):
+        logger.info(type(key))
+        if isinstance(key, keyboard.KeyCode) and key.char:
+            # Скипаем управляющие символы (Ctrl+A и т.д.)
+            if not key.char.isalnum() or key.char.isupper():
+                logger.debug(f"Skipped {key.char=}")
+                return
+
+        self.pressed_keys.add(key)
+    
+    def discard_key(self, key: keyboard.Key | keyboard.KeyCode):
+        self.pressed_keys.discard(key)
+
+    def clear(self):
+        self.pressed_keys.clear()
 
 
 class HotkeyManager:
@@ -110,41 +126,39 @@ class HotkeyManager:
         Returns:
             True если регистрация успешна
         """
-        with self._lock:
-            logger.debug(f"Регистрация горячей клавиши: {name}, клавиши: {keys}, режим: {mode}")
-            logger.info(f"🔥 HOTKEY REGISTRATION EVENT: {name} (количество регистраций: {len(self._actions) + 1})")
-            
-            # Конвертируем ключи в tuple
-            key_tuple = self._parse_keys(keys)
-            if not key_tuple:
-                logger.error(f"❌ Неверный формат клавиш: {keys}")
-                return False
-            
-            # Проверяем конфликты
-            conflicts = self._check_conflicts(name, key_tuple)
-            if conflicts:
-                logger.warning(f"⚠️ Конфликт горячих клавиш: {name} конфликтует с {conflicts}")
-            
-            action = HotkeyAction(
-                name=name,
-                keys=key_tuple,
-                callback=callback,
-                mode=mode,
-                description=description,
-                on_release=on_release
-            )
-            
-            self._actions[name] = action
-            logger.info(f"✅ Горячая клавиша '{name}' успешно зарегистрирована: {key_tuple}")
-            return True
+        logger.debug(f"Регистрация горячей клавиши: {name}, клавиши: {keys}, режим: {mode}")
+        logger.info(f"🔥 HOTKEY REGISTRATION EVENT: {name} (количество регистраций: {len(self._actions) + 1})")
+        
+        # Конвертируем ключи в tuple
+        key_tuple = self._parse_keys(keys)
+        if not key_tuple:
+            logger.error(f"❌ Неверный формат клавиш: {keys}")
+            return False
+        
+        # Проверяем конфликты
+        conflicts = self._check_conflicts(name, key_tuple)
+        if conflicts:
+            logger.warning(f"⚠️ Конфликт горячих клавиш: {name} конфликтует с {conflicts}")
+        
+        action = HotkeyAction(
+            name=name,
+            keys=key_tuple,
+            callback=callback,
+            mode=mode,
+            description=description,
+            on_release=on_release
+        )
+        
+        self._actions[name] = action
+        logger.info(f"✅ Горячая клавиша '{name}' успешно зарегистрирована: {key_tuple}")
+        return True
     
     def unregister(self, name: str) -> bool:
         """Удалить регистрацию горячей клавиши"""
-        with self._lock:
-            if name in self._actions:
-                del self._actions[name]
-                return True
-            return False
+        if name in self._actions:
+            del self._actions[name]
+            return True
+        return False
     
     def clear(self):
         """Удалить все регистрации"""
@@ -313,7 +327,7 @@ class HotkeyManager:
             logger.info("Остановка слушателя горячих клавиш")
             self._listener.stop()
             self._listener = None
-        self._state.pressed_keys.clear()
+        self._state.clear()
         self._state.active_hotkey = None
         logger.info("⏹️ Менеджер горячих клавиш остановлен")
     
@@ -327,50 +341,44 @@ class HotkeyManager:
         """Обработка нажатия клавиши"""
         logger.debug(f"Нажатие клавиши: {key}, текущие нажатые: {self._state.pressed_keys}")
         
-        # Дополнительная диагностика для цифровых клавиш
-        if hasattr(key, 'char') and key.char and key.char.isdigit():
-            logger.debug(f"🔍 Обнаружена цифровая клавиша: char='{key.char}', vk={getattr(key, 'vk', 'N/A')}")
+        self._state.add_key(key)
+        logger.debug(f"Добавлена клавиша {key}, текущее состояние: {self._state.pressed_keys}")
         
-        with self._lock:
-            self._state.pressed_keys.add(key)
-            logger.debug(f"Добавлена клавиша {key}, текущее состояние: {self._state.pressed_keys}")
+        # Ищем совпадающую горячую клавишу
+        for name, action in self._actions.items():
+            logger.debug(f"🔍 Проверка действия '{name}': ожидаемые клавиши={action.keys}")
+            match_result = self._keys_match(action.keys, self._state.pressed_keys)
+            logger.debug(f"Проверка горячего клавиши '{name}': требуется {action.keys}, нажато {self._state.pressed_keys}, совпадение: {match_result}")
             
-            # Ищем совпадающую горячую клавишу
-            for name, action in self._actions.items():
-                logger.debug(f"🔍 Проверка действия '{name}': ожидаемые клавиши={action.keys}")
-                match_result = self._keys_match(action.keys, self._state.pressed_keys)
-                logger.debug(f"Проверка горячего клавиши '{name}': требуется {action.keys}, нажато {self._state.pressed_keys}, совпадение: {match_result}")
-                
-                if match_result:
-                    logger.info(f"Найдено совпадение для '{name}', активация")
-                    self._activate_hotkey(action)
-                    break
-                else:
-                    logger.debug(f"Совпадение для '{name}' не найдено")
+            if match_result:
+                logger.info(f"Найдено совпадение для '{name}', активация")
+                self._activate_hotkey(action)
+                break
+            else:
+                logger.debug(f"Совпадение для '{name}' не найдено")
     
     def _on_release(self, key):
         """Обработка отпускания клавиши"""
         logger.debug(f"Отпускание клавиши: {key}, текущие нажатые: {self._state.pressed_keys}")
         
-        with self._lock:
-            # Удаляем из нажатых
-            self._state.pressed_keys.discard(key)
-            logger.debug(f"Удалена клавиша {key}, текущее состояние: {self._state.pressed_keys}")
-            
-            # Проверяем PTT режим
-            if self._state.active_hotkey:
-                logger.debug(f"Активная горячая клавиша: {self._state.active_hotkey}")
-                action = self._actions.get(self._state.active_hotkey)
-                if action and action.mode == HotkeyMode.PUSH_TO_TALK:
-                    # Проверяем, все ли клавиши ещё нажаты
-                    match_result = self._keys_match(action.keys, self._state.pressed_keys)
-                    logger.debug(f"PTT проверка для '{self._state.active_hotkey}': требуется {action.keys}, нажато {self._state.pressed_keys}, совпадение: {match_result}")
-                    
-                    if not match_result:
-                        logger.info(f"Деактивация PTT горячего клавиши '{self._state.active_hotkey}'")
-                        self._deactivate_hotkey(action)
-                    else:
-                        logger.debug(f"PTT горячего клавиша '{self._state.active_hotkey}' остаётся активной")
+        # Удаляем из нажатых
+        self._state.discard_key(key)
+        logger.debug(f"Удалена клавиша {key}, текущее состояние: {self._state.pressed_keys}")
+        
+        # Проверяем PTT режим
+        if self._state.active_hotkey:
+            logger.debug(f"Активная горячая клавиша: {self._state.active_hotkey}")
+            action = self._actions.get(self._state.active_hotkey)
+            if action and action.mode == HotkeyMode.PUSH_TO_TALK:
+                # Проверяем, все ли клавиши ещё нажаты
+                match_result = self._keys_match(action.keys, self._state.pressed_keys)
+                logger.debug(f"PTT проверка для '{self._state.active_hotkey}': требуется {action.keys}, нажато {self._state.pressed_keys}, совпадение: {match_result}")
+                
+                if not match_result:
+                    logger.info(f"Деактивация PTT горячего клавиши '{self._state.active_hotkey}'")
+                    self._deactivate_hotkey(action)
+                else:
+                    logger.debug(f"PTT горячего клавиша '{self._state.active_hotkey}' остаётся активной")
     
     def _keys_match(self, required: Tuple, pressed: Set) -> bool:
         """Проверить соответствие нажатых клавиш требуемым"""

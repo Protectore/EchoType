@@ -14,7 +14,7 @@ import requests
 from pynput import keyboard
 
 from config_manager import ConfigManager
-from Client.audio_recorder import AudioRecorder, AudioData, RecordingState
+from Client.audio_recorder import AudioRecorder, AudioData
 from Client.hotkey_manager import HotkeyManager, HotkeyMode
 
 
@@ -45,8 +45,6 @@ class Client:
         
         # Флаг работы
         self._running = False
-        
-        self._print_init_info()
     
     def _init_audio_recorder(self):
         """Инициализация аудио рекордера"""
@@ -68,26 +66,19 @@ class Client:
         # Регистрируем основную горячую клавишу записи
         record_keys = self.config.get_hotkey_keys('record')
         record_mode = self.config.get_hotkey_mode('record')
+
+        mode = HotkeyMode.PUSH_TO_TALK if record_mode == 'ptt' else HotkeyMode.TOGGLE
+        callback = self.start_recording if mode == HotkeyMode.PUSH_TO_TALK else self.toggle_recording
+        on_release = self.stop_recording if mode == HotkeyMode.PUSH_TO_TALK else None
         
-        if record_mode == 'ptt':
-            # Push-to-Talk режим
-            self.hotkey_manager.register(
-                name='record',
-                keys=record_keys,
-                callback=self.start_recording,
-                mode=HotkeyMode.PUSH_TO_TALK,
-                description=self.config.get('hotkeys.record.description', 'Запись голоса'),
-                on_release=self.stop_recording
-            )
-        else:
-            # Toggle режим
-            self.hotkey_manager.register(
-                name='record',
-                keys=record_keys,
-                callback=self.toggle_recording,
-                mode=HotkeyMode.TOGGLE,
-                description=self.config.get('hotkeys.record.description', 'Запись голоса')
-            )
+        self.hotkey_manager.register(
+            name='record',
+            keys=record_keys,
+            callback=callback,
+            mode=mode,
+            description=self.config.get('hotkeys.record.description', 'Запись голоса'),
+            on_release=on_release
+        )
         
         # Регистрируем дополнительные горячие клавиши из конфигурации
         hotkeys = self.config.get_hotkeys()
@@ -105,21 +96,6 @@ class Client:
                         mode=HotkeyMode.PUSH_TO_TALK if mode == 'ptt' else HotkeyMode.TOGGLE,
                         description=description
                     )
-    
-    def _print_init_info(self):
-        """Вывести информацию об инициализации"""
-        print(f"🎤 Голосовой клиент инициализирован")
-        print(f"🔗 Сервер: {self.server_url}")
-        print(f"📤 Режим вывода: {self.output_mode}")
-        
-        # Выводим зарегистрированные горячие клавиши
-        hotkeys = self.hotkey_manager.get_registered_hotkeys()
-        for name, action in hotkeys.items():
-            display = self.hotkey_manager.get_hotkey_display_name(name)
-            mode_str = "PTT" if action.mode == HotkeyMode.PUSH_TO_TALK else "Toggle"
-            print(f"🎯 {action.description}: {display} ({mode_str})")
-        
-        print(f"\nНажмите горячую клавишу для начала записи")
     
     # === Callbacks для AudioRecorder ===
     

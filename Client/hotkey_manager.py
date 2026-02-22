@@ -7,10 +7,7 @@ from typing import Optional, Callable, Dict, Set, List, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pynput import keyboard
-
 from pynput.keyboard import Key, KeyCode
-
-# Импорт логгера
 from logger import get_logger
 
 
@@ -22,7 +19,6 @@ class HotkeyMode(Enum):
     """Режимы работы горячей клавиши"""
     TOGGLE = "toggle"          # Нажатие включает/выключает
     PUSH_TO_TALK = "ptt"       # Удержание для записи
-    ONE_SHOT = "one_shot"      # Однократное действие
 
 
 @dataclass
@@ -42,7 +38,7 @@ class HotkeyState:
     pressed_keys: Set[ keyboard.Key | keyboard.KeyCode] = field(default_factory=set)
     active_hotkey: Optional[str] = None
 
-    def add_key(self, key: keyboard.Key | keyboard.KeyCode):
+    def add_key(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         logger.info(type(key))
         if isinstance(key, keyboard.KeyCode) and key.char:
             # Скипаем управляющие символы (Ctrl+A и т.д.)
@@ -52,10 +48,10 @@ class HotkeyState:
 
         self.pressed_keys.add(key)
     
-    def discard_key(self, key: keyboard.Key | keyboard.KeyCode):
+    def discard_key(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         self.pressed_keys.discard(key)
 
-    def clear(self):
+    def clear(self) -> None:
         self.pressed_keys.clear()
 
 
@@ -423,11 +419,6 @@ class HotkeyManager:
         elif action.mode == HotkeyMode.TOGGLE:
             logger.info(f"Toggle горячего клавиши '{action.name}' вызов callback")
             action.callback()
-        
-        # Для One-Shot - выполняем один раз
-        elif action.mode == HotkeyMode.ONE_SHOT:
-            logger.info(f"One-shot горячего клавиши '{action.name}' вызов callback")
-            action.callback()
     
     def _deactivate_hotkey(self, action: HotkeyAction):
         """Деактивировать горячую клавишу (для PTT)"""
@@ -443,64 +434,3 @@ class HotkeyManager:
         """Получить все зарегистрированные горячие клавиши"""
         return self._actions.copy()
     
-    def get_hotkey_display_name(self, name: str) -> str:
-        """Получить отображаемое имя горячей клавиши"""
-        action = self._actions.get(name)
-        if not action:
-            return ""
-        
-        parts = []
-        for key in action.keys:
-            if isinstance(key, Key):
-                key_name = key.name
-                # Красивое отображение
-                key_name = key_name.replace('_', ' ').title()
-                parts.append(key_name)
-            elif isinstance(key, KeyCode):
-                if key.char:
-                    parts.append(key.char.upper())
-                else:
-                    parts.append(f"Key({key.vk})")
-        
-        return '+'.join(parts)
-    
-    def get_hotkey_description(self, name: str) -> str:
-        """Получить описание горячей клавиши"""
-        action = self._actions.get(name)
-        return action.description if action else ""
-
-
-# === Утилитарные функции ===
-
-def create_toggle_hotkey(
-    name: str,
-    keys,
-    callback: Callable[[], None],
-    description: str = ""
-) -> dict:
-    """Создать данные для toggle горячей клавиши"""
-    return {
-        'name': name,
-        'keys': keys,
-        'callback': callback,
-        'mode': HotkeyMode.TOGGLE,
-        'description': description
-    }
-
-
-def create_ptt_hotkey(
-    name: str,
-    keys,
-    on_press: Callable[[], None],
-    on_release: Callable[[], None],
-    description: str = ""
-) -> dict:
-    """Создать данные для PTT горячей клавиши"""
-    return {
-        'name': name,
-        'keys': keys,
-        'callback': on_press,
-        'mode': HotkeyMode.PUSH_TO_TALK,
-        'description': description,
-        'on_release': on_release
-    }

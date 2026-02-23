@@ -207,15 +207,10 @@ class ConfigManager:
         """Проверить, включен ли GUI"""
         return self.get('gui.enabled', True)
     
-    def get_gui_language(self) -> str:
-        """Получить язык интерфейса"""
-        return self.get('gui.language', 'ru')
-    
     def get_gui_settings(self) -> Dict[str, Any]:
         """Получить все настройки GUI"""
         defaults = {
             'enabled': True,
-            'language': 'ru',
             'show_popup': True,
             'popup_position': 'cursor',
             'show_timer': True,
@@ -261,7 +256,7 @@ class ConfigManager:
         Установить значение конфигурации.
         
         Args:
-            key: Ключ конфигурации (например: 'gui.language')
+            key: Ключ конфигурации (например: 'server.port')
             value: Новое значение
         
         Returns:

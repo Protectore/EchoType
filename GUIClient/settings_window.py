@@ -192,16 +192,6 @@ class SettingsWindow(QDialog):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         
-        # Язык
-        lang_group = QGroupBox("Локализация")
-        form = QFormLayout(lang_group)
-        
-        self.language_combo = QComboBox()
-        self.language_combo.addItems(["Русский", "English"])
-        form.addRow("Язык:", self.language_combo)
-        
-        layout.addWidget(lang_group)
-        
         # Popup окно
         popup_group = QGroupBox("Всплывающее окно")
         form = QFormLayout(popup_group)
@@ -335,9 +325,6 @@ class SettingsWindow(QDialog):
         self.add_space_check.setChecked(self.config.get_add_space())
         
         # GUI
-        lang = self.config.get_gui_language()
-        self.language_combo.setCurrentIndex(0 if lang == 'ru' else 1)
-        
         self.show_popup_check.setChecked(self.config.show_popup())
         
         position = self.config.get_popup_position()
@@ -385,9 +372,6 @@ class SettingsWindow(QDialog):
         self.config.set('client.add_space', self.add_space_check.isChecked())
         
         # GUI
-        lang = 'ru' if self.language_combo.currentIndex() == 0 else 'en'
-        self.config.set('gui.language', lang)
-        
         self.config.set('gui.show_popup', self.show_popup_check.isChecked())
         
         positions = ['cursor', 'center', 'corner']

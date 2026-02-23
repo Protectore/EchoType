@@ -10,16 +10,19 @@ import pyperclip
 from typing import Optional, Dict, Any
 
 import requests
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from Client.client import Client
 from config_manager import ConfigManager
-from Client.audio_recorder import AudioRecorder, AudioData, RecordingState
+from Client.audio_recorder import AudioData, RecordingState
 from GUIClient.tray_app import TrayApp, TrayStatus
 from GUIClient.popup_window import PopupWindow
 from GUIClient.settings_window import SettingsWindow
 from logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class GUIClient(QObject):
@@ -35,7 +38,6 @@ class GUIClient(QObject):
     def __init__(self, config: ConfigManager):
         super().__init__()
         
-        self.logger = get_logger("GUIClient")
         self.config = config
 
         self.client = Client(config)
@@ -72,6 +74,7 @@ class GUIClient(QObject):
         # Tray-апплет
         self.tray = TrayApp(self.config)
         self.tray.settings_requested.connect(self._show_settings)
+        self.tray.settings_requested.connect(self.client.hotkey_manager.stop)
         self.tray.quit_requested.connect(self._quit)
         
         # Popup окно
@@ -223,13 +226,14 @@ class GUIClient(QObject):
         if self.settings_window is None:
             self.settings_window = SettingsWindow(self.config)
             self.settings_window.settings_saved.connect(self._on_settings_saved)
+            self.settings_window.finished.connect(self.client.hotkey_manager.start)
         
         self.settings_window.show()
         self.settings_window.activateWindow()
     
     def _on_settings_saved(self):
         """При сохранении настроек"""
-        self.logger.info("🔥 SETTINGS SAVED EVENT: перезагрузка горячих клавиш")
+        logger.info("🔥 SETTINGS SAVED EVENT: перезагрузка горячих клавиш")
         
         # Перезагружаем горячие клавиши
         self.client.hotkey_manager.stop()

@@ -52,7 +52,6 @@ class Client:
         """Инициализация менеджера горячих клавиш"""
         self.hotkey_manager = HotkeyManager()
         
-        # Регистрируем основную горячую клавишу записи
         record_keys = self.config.get_hotkey_keys('record')
         record_mode = self.config.get_hotkey_mode('record')
 
@@ -155,3 +154,10 @@ class Client:
             if self.auto_paste:
                 self.keyboard.tap(keyboard.Key.enter)
             self.hotkey_manager.start()
+    
+    def clean_up(self):
+        """Остановить запись если она идёт и остановить менеджер горячих клавиш"""
+        if self.audio_recorder.is_recording:
+            self.audio_recorder.stop_recording()
+        
+        self.hotkey_manager.stop()

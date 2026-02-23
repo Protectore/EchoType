@@ -4,7 +4,6 @@ GUI клиент для EchoType
 
 import sys
 import numpy as np
-import pyperclip
 from typing import Optional
 
 from PyQt6.QtWidgets import QApplication
@@ -69,7 +68,6 @@ class GUIClient(QObject):
         
         # Popup окно
         self.popup = PopupWindow(self.config)
-        self.popup.copy_requested.connect(self._copy_text)
         
         # Окно настроек (создаётся по требованию)
         self.settings_window: Optional[SettingsWindow] = None
@@ -123,11 +121,6 @@ class GUIClient(QObject):
             level = float(np.abs(indata).mean())
             self.popup.add_audio_level(level)
     
-    def _copy_text(self, text: str):
-        """Копировать текст в буфер обмена"""
-        pyperclip.copy(text)
-        self.tray.show_message("Скопировано", "Текст скопирован в буфер обмена")
-    
     # === Настройки ===
     
     def _show_settings(self):
@@ -163,6 +156,7 @@ class GUIClient(QObject):
         """Завершить работу"""
         self.popup.hide()
         self.tray.hide()
+        self.client.clean_up()
         self.app.quit() # type: ignore
     
     def run(self):

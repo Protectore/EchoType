@@ -9,7 +9,6 @@ import queue
 
 from config_manager import ConfigManager
 from Client.AudioRecorder import AudioData
-from Client.HotkeyManager import HotkeyManager, HotkeyMode
 from Client.client import Client
 
 
@@ -31,26 +30,6 @@ class CliClient(Client):
         self.audio_recorder.on_recording_stop(self._on_recording_stop)
         self.audio_recorder.on_error(self._on_recording_error)
     
-    def init_hotkey_manager(self):
-        """Инициализация менеджера горячих клавиш"""
-        self.hotkey_manager = HotkeyManager()
-        
-        record_keys = self.config.get_hotkey_keys('record')
-        record_mode = self.config.get_hotkey_mode('record')
-
-        mode = HotkeyMode.PUSH_TO_TALK if record_mode == 'ptt' else HotkeyMode.TOGGLE
-        callback = self.start_recording if mode == HotkeyMode.PUSH_TO_TALK else self.toggle_recording
-        on_release = self.stop_recording if mode == HotkeyMode.PUSH_TO_TALK else None
-        
-        self.hotkey_manager.register(
-            name='record',
-            keys=record_keys,
-            callback=callback,
-            mode=mode,
-            description=self.config.get('hotkeys.record.description', 'Запись голоса'),
-            on_release=on_release
-        )
-
     # === Callbacks для AudioRecorder ===
     
     def _on_recording_start(self):
@@ -108,12 +87,7 @@ class CliClient(Client):
     def stop(self):
         """Остановить клиент"""
         self._running = False
-        
-        if self.audio_recorder.is_recording:
-            self.audio_recorder.stop_recording()
-        
-        self.hotkey_manager.stop()
-        
+        self.clean_up()
         print("\n👋 Клиент остановлен")
 
 

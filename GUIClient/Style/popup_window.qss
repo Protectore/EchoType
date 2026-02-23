@@ -1,0 +1,53 @@
+/* Стили для всплывающего окна EchoType */
+
+/* Основной контейнер окна */
+QWidget#PopupWindow {
+    background-color: #2D2D2D;
+    border-radius: 8px;
+}
+
+/* Статус лейбл */
+QLabel {
+    color: #FFFFFF;
+    font-family: "Segoe UI";
+    font-size: 11pt;
+    font-weight: bold;
+}
+
+QLabel.recording {
+    color: #FF5252;
+}
+
+QLabel.processing {
+    color: #FFC107;
+}
+
+QLabel.ready {
+    color: #4CAF50;
+}
+
+QLabel.error {
+    color: #FF5252;
+}
+
+/* Разделитель */
+QFrame#line_separator {
+    background-color: #444;
+    max-height: 1px;
+}
+
+/* Превью текста */
+QLabel#text_preview {
+    color: #AAA;
+    font-family: "Segoe UI";
+    font-size: 10pt;
+    max-height: 40px;
+}
+
+QLabel#text_preview.ready {
+    color: #FFF;
+}
+
+QLabel#text_preview.error {
+    color: #FF5252;
+}

@@ -4,13 +4,13 @@
 """
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QApplication
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QFrame, QApplication
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont
 
 from GUIClient.Widgets import TimerLabel, AudioVisualizer
+from GUIClient.utility import GuiUtility
 from config_manager import ConfigManager
 
 from logger import get_logger
@@ -25,9 +25,6 @@ class PopupWindow(QWidget):
     Показывает визуализацию аудио, таймер и превью распознанного текста.
     """
     
-    # Сигналы
-    copy_requested = pyqtSignal(str)
-    repeat_requested = pyqtSignal()
     closed = pyqtSignal()
     
     def __init__(self, config: ConfigManager, parent=None):
@@ -36,6 +33,7 @@ class PopupWindow(QWidget):
         self.config = config
         
         self._init_ui()
+        self.setStyleSheet(GuiUtility.read_style_file("popup_window"))
         self._init_position()
         
         # Флаги окна - всегда поверх других, без рамки
@@ -51,6 +49,7 @@ class PopupWindow(QWidget):
     def _init_ui(self):
         """Инициализация UI"""
         self.setFixedSize(280, 180)
+        self.setObjectName("PopupWindow")
         
         # Главный layout
         layout = QVBoxLayout(self)
@@ -61,8 +60,6 @@ class PopupWindow(QWidget):
         header_layout = QHBoxLayout()
         
         self.status_label = QLabel("🎤 Запись...")
-        self.status_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        self.status_label.setStyleSheet("color: #FFFFFF;")
         header_layout.addWidget(self.status_label)
         
         header_layout.addStretch()
@@ -79,70 +76,21 @@ class PopupWindow(QWidget):
         # Разделитель
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background-color: #444;")
+        line.setObjectName("line_separator")
         line.setFixedHeight(1)
         layout.addWidget(line)
         
         # Превью текста
         self.text_preview = QLabel("Текст появится здесь...")
-        self.text_preview.setFont(QFont("Segoe UI", 10))
-        self.text_preview.setStyleSheet("color: #AAA;")
+        self.text_preview.setObjectName("text_preview")
         self.text_preview.setWordWrap(True)
-        self.text_preview.setMaximumHeight(40)
         layout.addWidget(self.text_preview)
         
         # Кнопки
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(8)
         
-        self.copy_btn = QPushButton("📋 Копировать")
-        self.copy_btn.setFixedHeight(28)
-        self.copy_btn.setEnabled(False)
-        self.copy_btn.clicked.connect(self._on_copy)
-        self.copy_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2196F3;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #1976D2;
-            }
-            QPushButton:disabled {
-                background-color: #555;
-                color: #888;
-            }
-        """)
-        buttons_layout.addWidget(self.copy_btn)
-        
-        self.repeat_btn = QPushButton("🔄 Повторить")
-        self.repeat_btn.setFixedHeight(28)
-        self.repeat_btn.clicked.connect(self._on_repeat)
-        self.repeat_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #388E3C;
-            }
-        """)
-        buttons_layout.addWidget(self.repeat_btn)
-        
         layout.addLayout(buttons_layout)
-        
-        # Стиль окна
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #2D2D2D;
-                border-radius: 8px;
-            }
-        """)
 
         # Попытка пофиксить баг: окно отказывается появляться при вызове show
         # self.show()
@@ -167,7 +115,7 @@ class PopupWindow(QWidget):
         if screen:
             geometry = screen.geometry()
             x = (geometry.width() - self.width()) // 2
-            y = (geometry.height() - self.height()) // 2
+            y = (geometry.height() - self.height()) * 98 // 100
             self.move(x, y)
     
     def _position_at_cursor(self):
@@ -210,13 +158,9 @@ class PopupWindow(QWidget):
         """Начать отображение записи"""
         logger.debug("Setting popup info")
         self.status_label.setText("🎤 Запись...")
-        self.status_label.setStyleSheet("color: #FF5252;")
-        self.timer_label.reset()
-        self.timer_label.start()
-        self.visualizer.clear()
+        self.status_label.setProperty("class", "recording")
         self.text_preview.setText("Текст появится здесь...")
-        self.text_preview.setStyleSheet("color: #AAA;")
-        self.copy_btn.setEnabled(False)
+        self.text_preview.setProperty("class", "")
         
         logger.debug("Showing popup window")
         self._init_position()
@@ -227,7 +171,7 @@ class PopupWindow(QWidget):
         """Остановить отображение записи"""
         self.timer_label.stop()
         self.status_label.setText("⏳ Обработка...")
-        self.status_label.setStyleSheet("color: #FFC107;")
+        self.status_label.setProperty("class", "processing")
     
     def add_audio_level(self, level: float):
         """Добавить уровень аудио для визуализации"""
@@ -236,37 +180,27 @@ class PopupWindow(QWidget):
     def set_result(self, text: str, language: str = ""):
         """Установить результат распознавания"""
         self.status_label.setText("✅ Готово")
-        self.status_label.setStyleSheet("color: #4CAF50;")
+        self.status_label.setProperty("class", "ready")
         
         if text:
             # Показываем превью текста
             preview = text[:100] + "..." if len(text) > 100 else text
             self.text_preview.setText(preview)
-            self.text_preview.setStyleSheet("color: #FFF;")
-            self.copy_btn.setEnabled(True)
+            self.text_preview.setProperty("class", "ready")
             self._current_text = text
         else:
             self.text_preview.setText("❌ Текст не распознан")
-            self.text_preview.setStyleSheet("color: #FF5252;")
+            self.text_preview.setProperty("class", "error")
     
     def set_error(self, error: str):
         """Установить ошибку"""
         self.status_label.setText("❌ Ошибка")
-        self.status_label.setStyleSheet("color: #FF5252;")
+        self.status_label.setProperty("class", "error")
         self.text_preview.setText(error[:100])
-        self.text_preview.setStyleSheet("color: #FF5252;")
+        self.text_preview.setProperty("class", "error")
     
     # === Обработчики ===
-    
-    def _on_copy(self):
-        """Обработка нажатия копирования"""
-        if hasattr(self, '_current_text'):
-            self.copy_requested.emit(self._current_text)
-    
-    def _on_repeat(self):
-        """Обработка нажатия повторить"""
-        self.repeat_requested.emit()
-    
+
     def mousePressEvent(self, event):
         """Закрытие по клику вне окна"""
         if event.button() == Qt.MouseButton.RightButton:

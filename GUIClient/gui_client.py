@@ -61,7 +61,7 @@ class GUIClient(QObject):
     def _init_ui(self):
         """Инициализация UI компонентов"""
         # Tray-апплет
-        self.tray = TrayApp(self.config)
+        self.tray = TrayApp()
         self.tray.settings_requested.connect(self._show_settings)
         self.tray.settings_requested.connect(self.client.hotkey_manager.stop)
         self.tray.quit_requested.connect(self._quit)

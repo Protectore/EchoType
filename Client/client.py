@@ -14,7 +14,7 @@ import requests
 from pynput import keyboard
 
 from config_manager import ConfigManager
-from Client.audio_recorder import AudioRecorder, AudioData
+from Client.AudioRecorder import AudioRecorder, AudioData
 from Client.hotkey_manager import HotkeyManager, HotkeyMode
 
 

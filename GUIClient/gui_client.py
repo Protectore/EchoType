@@ -15,7 +15,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from Client.client import Client
 from config_manager import ConfigManager
-from Client.audio_recorder import AudioData, RecordingState
+from Client.AudioRecorder import AudioData
 from GUIClient.tray_app import TrayApp, TrayStatus
 from GUIClient.popup_window import PopupWindow
 from GUIClient.settings_window import SettingsWindow

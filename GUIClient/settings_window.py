@@ -14,7 +14,7 @@ from PyQt6.QtGui import QKeySequence
 
 from GUIClient.Widgets.hotkey_edit import HotkeyEdit
 from config_manager import ConfigManager
-from Client.audio_recorder import AudioRecorder
+from Client.AudioRecorder import AudioRecorder
 
 
 from logger import get_logger

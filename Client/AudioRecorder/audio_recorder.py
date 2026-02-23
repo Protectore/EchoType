@@ -2,53 +2,17 @@
 Модуль записи аудио для голосового клиента
 """
 
-import os
-import tempfile
-import threading
 import time
 from typing import Optional, Callable, List
-from dataclasses import dataclass
-from enum import Enum
-
 import numpy as np
 import sounddevice as sd
-import soundfile as sf
+
+from Client.AudioRecorder import AudioData
+from Client.AudioRecorder import RecordingState
+from logger import get_logger
 
 
-class RecordingState(Enum):
-    """Состояния записи"""
-    IDLE = "idle"
-    RECORDING = "recording"
-    PROCESSING = "processing"
-
-
-@dataclass
-class AudioData:
-    """Контейнер для записанных аудиоданных"""
-    samples: np.ndarray
-    sample_rate: int
-    channels: int
-    duration: float
-    
-    def save_to_wav(self, path: str) -> bool:
-        """Сохранить аудио в WAV файл"""
-        try:
-            sf.write(path, self.samples, self.sample_rate)
-            return True
-        except Exception as e:
-            print(f"❌ Ошибка сохранения аудио: {e}")
-            return False
-    
-    def save_to_temp_wav(self) -> Optional[str]:
-        """Сохранить аудио во временный WAV файл"""
-        try:
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-                tmp_path = tmp_file.name
-                sf.write(tmp_path, self.samples, self.sample_rate)
-            return tmp_path
-        except Exception as e:
-            print(f"❌ Ошибка создания временного файла: {e}")
-            return None
+logger = get_logger(__name__)
 
 
 class AudioRecorder:
@@ -140,6 +104,7 @@ class AudioRecorder:
             return False
         
         try:
+            logger.debug("🎤 Starting recording")
             self._audio_chunks = []
             self._state = RecordingState.RECORDING
             
@@ -179,6 +144,7 @@ class AudioRecorder:
         if self._state != RecordingState.RECORDING:
             return None
         
+        logger.debug("🎤 Stopping recording")
         self._state = RecordingState.PROCESSING
         
         # Останавливаем поток

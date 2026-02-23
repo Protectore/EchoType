@@ -7,7 +7,7 @@ import numpy as np
 from typing import Optional
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QObject, QThread
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from Client import Client
 from Client.AudioRecorder import AudioData
@@ -26,6 +26,8 @@ class GUIClient(QObject):
     Главный класс GUI клиента EchoType.
     Объединяет tray-апплет, popup окно и настройки.
     """
+
+    recording_start = pyqtSignal()
     
     def __init__(self, config: ConfigManager):
         super().__init__()
@@ -71,10 +73,15 @@ class GUIClient(QObject):
         
         # Окно настроек (создаётся по требованию)
         self.settings_window: Optional[SettingsWindow] = None
-    
+
+        self.recording_start.connect(self._process_on_recording_start)
+
     # === Callbacks ===
     
     def _on_recording_start(self):
+        self.recording_start.emit()
+
+    def _process_on_recording_start(self):
         """При начале записи"""
         self.tray.set_status(TrayStatus.RECORDING)
 
@@ -92,7 +99,9 @@ class GUIClient(QObject):
         self.processing_thread = QThread()
 
         def thread_func():
-            self.client.process_recording(audio_data)
+            text = self.client.process_recording(audio_data)
+            if text:
+                self.popup.set_result(text)
             self.tray.set_status(TrayStatus.READY)
             self.processing_thread.quit()
         
@@ -100,13 +109,6 @@ class GUIClient(QObject):
         self.processing_thread.finished.connect(self.processing_thread.deleteLater)
         self.processing_thread.start()
 
-        # Обрабатываем в отдельном потоке
-        # threading.Thread(
-        #     target=self.client.process_recording,
-        #     args=(audio_data,),
-        #     daemon=True
-        # ).start()
-    
     def _on_recording_error(self, error: str):
         """При ошибке записи"""
         self.tray.set_status(TrayStatus.ERROR, f"Ошибка: {error}")

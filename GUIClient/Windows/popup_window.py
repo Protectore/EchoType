@@ -148,11 +148,6 @@ class PopupWindow(QWidget):
             self.move(x, y)
     
     # === Публичные методы ===
-
-    def my_show(self):
-        logger.debug("Showing popup window")
-        self._init_position()
-        self.show()
     
     def start_recording(self):
         """Начать отображение записи"""

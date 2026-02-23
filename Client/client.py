@@ -91,7 +91,7 @@ class Client:
         try:
             tmp_path = audio_data.save_to_temp_wav()
             if not tmp_path:
-                return
+                return None
             
             logger.info("📡 Отправка на сервер...")
             result = self.send_to_server(tmp_path)
@@ -99,11 +99,11 @@ class Client:
             os.unlink(tmp_path)
             
             if result:
-                self.handle_result(result)
-                return result
+                return self.handle_result(result)
         
         except Exception as e:
             logger.error(f"❌ Ошибка обработки: {str(e)}")
+            return None
     
     def send_to_server(self, audio_path: str) -> Optional[Dict[str, Any]]:
         """Отправка аудио файла на STT сервер"""
@@ -154,6 +154,8 @@ class Client:
             if self.auto_paste:
                 self.keyboard.tap(keyboard.Key.enter)
             self.hotkey_manager.start()
+        
+        return text
     
     def clean_up(self):
         """Остановить запись если она идёт и остановить менеджер горячих клавиш"""

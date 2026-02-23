@@ -1,6 +1,5 @@
 """
 GUI клиент для EchoType
-Точка входа графического интерфейса
 """
 
 import sys
@@ -14,12 +13,12 @@ import requests
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from Client.client import Client
-from config_manager import ConfigManager
+from Client import Client
 from Client.AudioRecorder import AudioData
-from GUIClient.tray_app import TrayApp, TrayStatus
-from GUIClient.popup_window import PopupWindow
-from GUIClient.settings_window import SettingsWindow
+from GUIClient.TrayApp import TrayApp, TrayStatus
+from GUIClient.Windows import PopupWindow, SettingsWindow
+
+from config_manager import ConfigManager
 from logger import get_logger
 
 
@@ -278,14 +277,3 @@ class GUIClient(QObject):
             )
         
         return self.app.exec() # type: ignore
-
-
-def main():
-    """Точка входа GUI клиента"""
-    config = ConfigManager()
-    client = GUIClient(config)
-    sys.exit(client.run())
-
-
-if __name__ == "__main__":
-    main()

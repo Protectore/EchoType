@@ -4,25 +4,16 @@ Tray-апплет для EchoType
 """
 
 import sys
-import threading
-from typing import Optional, Callable
-from enum import Enum
+from typing import Optional
 
 from PyQt6.QtWidgets import (
-    QApplication, QSystemTrayIcon, QMenu, QMessageBox
+    QApplication, QSystemTrayIcon, QMenu
 )
 from PyQt6.QtGui import QIcon, QAction, QPixmap, QPainter, QColor, QFont
-from PyQt6.QtCore import QObject, pyqtSignal, QSize
+from PyQt6.QtCore import QObject, pyqtSignal
 
+from GUIClient.TrayApp.tray_status import TrayStatus
 from config_manager import ConfigManager
-
-
-class TrayStatus(Enum):
-    """Статусы tray-иконки"""
-    READY = "ready"
-    RECORDING = "recording"
-    PROCESSING = "processing"
-    ERROR = "error"
 
 
 class TrayApp(QObject):

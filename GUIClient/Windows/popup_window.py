@@ -3,135 +3,20 @@
 Минималистичное окно с визуализацией аудио и превью текста
 """
 
-import time
-from typing import Optional
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QSizePolicy
+    QPushButton, QFrame, QApplication
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
-from PyQt6.QtGui import QFont, QColor, QPalette, QPainter, QPen
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFont
 
-import numpy as np
-
+from GUIClient.Widgets import TimerLabel, AudioVisualizer
 from config_manager import ConfigManager
 
-
-class AudioVisualizer(QWidget):
-    """Виджет визуализации аудио в реальном времени"""
-    
-    def __init__(self, parent=None, width: int = 200, height: int = 40):
-        super().__init__(parent)
-        
-        self._width = width
-        self._height = height
-        self._levels: list = []
-        self._max_levels = 50  # Количество столбиков
-        
-        self.setFixedSize(width, height)
-        self.setMinimumSize(width, height)
-    
-    def add_level(self, level: float):
-        """Добавить уровень звука для визуализации"""
-        # Нормализуем уровень (0.0 - 1.0)
-        normalized = min(1.0, level * 10)  # Умножаем для лучшей видимости
-        self._levels.append(normalized)
-        
-        # Ограничиваем количество уровней
-        if len(self._levels) > self._max_levels:
-            self._levels.pop(0)
-        
-        self.update()
-    
-    def clear(self):
-        """Очистить визуализацию"""
-        self._levels.clear()
-        self.update()
-    
-    def paintEvent(self, event):
-        """Отрисовка визуализации"""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
-        # Фон
-        painter.fillRect(self.rect(), QColor(40, 40, 40))
-        
-        if not self._levels:
-            # Рисуем линию по центру если нет данных
-            painter.setPen(QPen(QColor(100, 100, 100), 1))
-            y = self._height // 2
-            painter.drawLine(0, y, self._width, y)
-            return
-        
-        # Рисуем столбики
-        bar_width = self._width / self._max_levels
-        bar_spacing = 2
-        
-        for i, level in enumerate(self._levels):
-            x = int(i * bar_width)
-            
-            # Высота столбика
-            bar_height = int(level * (self._height - 4))
-            
-            # Цвет в зависимости от уровня
-            if level < 0.3:
-                color = QColor(76, 175, 80)  # Зелёный
-            elif level < 0.7:
-                color = QColor(255, 193, 7)  # Жёлтый
-            else:
-                color = QColor(244, 67, 54)  # Красный
-            
-            # Рисуем столбик по центру
-            y_top = (self._height - bar_height) // 2
-            painter.fillRect(
-                x + bar_spacing // 2,
-                y_top,
-                int(bar_width) - bar_spacing,
-                bar_height,
-                color
-            )
+from logger import get_logger
 
 
-class TimerLabel(QLabel):
-    """Виджет таймера записи"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        
-        self._start_time: Optional[float] = None
-        self._timer = QTimer(self)
-        self._timer.timeout.connect(self._update_timer)
-        
-        self.setFont(QFont("Consolas", 16, QFont.Weight.Bold))
-        self.setStyleSheet("color: #FF5252;")
-        self.setText("00:00")
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    
-    def start(self):
-        """Запустить таймер"""
-        self._start_time = time.time()
-        self._timer.start(100)  # Обновление каждые 100мс
-    
-    def stop(self):
-        """Остановить таймер"""
-        self._timer.stop()
-    
-    def reset(self):
-        """Сбросить таймер"""
-        self.stop()
-        self._start_time = None
-        self.setText("00:00")
-    
-    def _update_timer(self):
-        """Обновить отображение таймера"""
-        if self._start_time is None:
-            return
-        
-        elapsed = time.time() - self._start_time
-        minutes = int(elapsed // 60)
-        seconds = int(elapsed % 60)
-        self.setText(f"{minutes:02d}:{seconds:02d}")
+logger  = get_logger(__name__)
 
 
 class PopupWindow(QWidget):
@@ -258,6 +143,10 @@ class PopupWindow(QWidget):
                 border-radius: 8px;
             }
         """)
+
+        # Попытка пофиксить баг: окно отказывается появляться при вызове show
+        # self.show()
+        # self.hide()
     
     def _init_position(self):
         """Инициализация позиции окна"""
@@ -269,10 +158,11 @@ class PopupWindow(QWidget):
             self._position_at_cursor()
         else:  # corner
             self._position_at_corner()
+        logger.debug(f"Popup position is set to {self.x()}, {self.y()}")
     
     def _center_on_screen(self):
         """Расположить окно по центру экрана"""
-        from PyQt6.QtWidgets import QApplication
+        logger.debug("Setting popup position to center")
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.geometry()
@@ -290,7 +180,6 @@ class PopupWindow(QWidget):
         y = cursor_pos.y() + 20
         
         # Проверяем границы экрана
-        from PyQt6.QtWidgets import QApplication
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.geometry()
@@ -303,7 +192,6 @@ class PopupWindow(QWidget):
     
     def _position_at_corner(self):
         """Расположить окно в углу экрана"""
-        from PyQt6.QtWidgets import QApplication
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.geometry()
@@ -312,9 +200,15 @@ class PopupWindow(QWidget):
             self.move(x, y)
     
     # === Публичные методы ===
+
+    def my_show(self):
+        logger.debug("Showing popup window")
+        self._init_position()
+        self.show()
     
     def start_recording(self):
         """Начать отображение записи"""
+        logger.debug("Setting popup info")
         self.status_label.setText("🎤 Запись...")
         self.status_label.setStyleSheet("color: #FF5252;")
         self.timer_label.reset()
@@ -324,8 +218,10 @@ class PopupWindow(QWidget):
         self.text_preview.setStyleSheet("color: #AAA;")
         self.copy_btn.setEnabled(False)
         
+        logger.debug("Showing popup window")
         self._init_position()
         self.show()
+        logger.debug("Popup window is shown")
     
     def stop_recording(self):
         """Остановить отображение записи"""

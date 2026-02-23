@@ -2,7 +2,6 @@
 Окно настроек для EchoType
 """
 
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, 
     QComboBox, QSpinBox, QCheckBox,

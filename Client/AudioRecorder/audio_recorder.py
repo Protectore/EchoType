@@ -7,8 +7,8 @@ from typing import Optional, Callable, List
 import numpy as np
 import sounddevice as sd
 
-from Client.AudioRecorder import AudioData
-from Client.AudioRecorder import RecordingState
+from Client.AudioRecorder.audio_data import AudioData
+from Client.AudioRecorder.recording_state import RecordingState
 from logger import get_logger
 
 

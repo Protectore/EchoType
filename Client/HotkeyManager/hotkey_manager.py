@@ -6,7 +6,9 @@ import threading
 from typing import Optional, Callable, Dict, Set, List, Tuple
 from pynput import keyboard
 from pynput.keyboard import Key, KeyCode
-from Client.HotkeyManager import HotkeyAction, HotkeyMode, HotkeyState
+from Client.HotkeyManager.hotkey_action import HotkeyAction
+from Client.HotkeyManager.hotkey_mode import HotkeyMode 
+from Client.HotkeyManager.hotkey_state import HotkeyState
 from logger import get_logger
 
 

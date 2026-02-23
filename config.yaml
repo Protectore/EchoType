@@ -9,9 +9,8 @@ client:
 gui:
   autostart: false
   enabled: true
-  language: ru
   minimize_to_tray: true
-  popup_position: cursor
+  popup_position: center
   show_popup: true
   show_timer: true
   show_visualizer: true
@@ -19,8 +18,8 @@ gui:
 hotkeys:
   record:
     description: Начать/остановить запись
-    keys: '*'
-    mode: toggle
+    keys: alt_gr
+    mode: ptt
 model:
   compute_type: float16
   device: cuda

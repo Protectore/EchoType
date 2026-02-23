@@ -3,15 +3,12 @@ GUI клиент для EchoType
 """
 
 import sys
-import os
-import threading
 import numpy as np
 import pyperclip
-from typing import Optional, Dict, Any
+from typing import Optional
 
-import requests
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, QThread
 
 from Client import Client
 from Client.AudioRecorder import AudioData
@@ -31,10 +28,6 @@ class GUIClient(QObject):
     Объединяет tray-апплет, popup окно и настройки.
     """
     
-    # Сигналы для коммуникации между компонентами
-    transcription_ready = pyqtSignal(str, str)  # text, language
-    transcription_error = pyqtSignal(str)
-    
     def __init__(self, config: ConfigManager):
         super().__init__()
         
@@ -48,9 +41,6 @@ class GUIClient(QObject):
         self.client.init_hotkey_manager()
         self._init_ui()
         
-        # Состояние
-        self._current_text = ""
-    
     def _init_app(self):
         """Инициализация QApplication"""
         self.app = QApplication.instance()
@@ -92,6 +82,7 @@ class GUIClient(QObject):
 
         if self.config.show_popup():
             self.popup.start_recording()
+            self.popup.show()
     
     def _on_recording_stop(self, audio_data: AudioData):
         """При остановке записи"""
@@ -100,12 +91,23 @@ class GUIClient(QObject):
         if self.config.show_popup():
             self.popup.stop_recording()
         
+        self.processing_thread = QThread()
+
+        def thread_func():
+            self.client.process_recording(audio_data)
+            self.tray.set_status(TrayStatus.READY)
+            self.processing_thread.quit()
+        
+        self.processing_thread.run = thread_func
+        self.processing_thread.finished.connect(self.processing_thread.deleteLater)
+        self.processing_thread.start()
+
         # Обрабатываем в отдельном потоке
-        threading.Thread(
-            target=self._process_audio,
-            args=(audio_data,),
-            daemon=True
-        ).start()
+        # threading.Thread(
+        #     target=self.client.process_recording,
+        #     args=(audio_data,),
+        #     daemon=True
+        # ).start()
     
     def _on_recording_error(self, error: str):
         """При ошибке записи"""
@@ -120,100 +122,6 @@ class GUIClient(QObject):
         if self.config.show_popup() and self.config.show_visualizer():
             level = float(np.abs(indata).mean())
             self.popup.add_audio_level(level)
-    
-    # === Обработка аудио ===
-    
-    def _process_audio(self, audio_data: AudioData):
-        """Обработка записанного аудио"""
-        try:
-            # Сохраняем во временный файл
-            tmp_path = audio_data.save_to_temp_wav()
-            if not tmp_path:
-                self.transcription_error.emit("Ошибка создания временного файла")
-                return
-            
-            # Отправляем на сервер
-            result = self._send_to_server(tmp_path)
-            
-            # Удаляем временный файл
-            os.unlink(tmp_path)
-            
-            if result:
-                text = result.get('text', '').strip()
-                language = result.get('language', 'unknown')
-                self.transcription_ready.emit(text, language)
-            else:
-                self.transcription_error.emit("Ошибка распознавания")
-        
-        except Exception as e:
-            self.transcription_error.emit(str(e))
-    
-    def _send_to_server(self, audio_path: str) -> Optional[Dict[str, Any]]:
-        """Отправка аудио на сервер"""
-        try:
-            with open(audio_path, 'rb') as audio_file:
-                files = {'audio': ('recording.wav', audio_file, 'audio/wav')}
-                response = requests.post(
-                    f"{self.config.get_server_url()}/transcribe/",
-                    files=files,
-                    timeout=30
-                )
-            
-            if response.status_code == 200:
-                return response.json()
-            return None
-        
-        except requests.exceptions.RequestException:
-            return None
-    
-    # === Обработка результатов ===
-    
-    def _handle_transcription(self, text: str, language: str):
-        """Обработка результата транскрипции"""
-        if not text:
-            self.tray.set_status(TrayStatus.READY)
-            if self.config.show_popup():
-                self.popup.set_result("", language)
-            return
-        
-        self._current_text = text
-        
-        # Обновляем UI
-        self.tray.set_status(TrayStatus.READY)
-        self.tray.show_message("Распознано", text[:50] + "..." if len(text) > 50 else text)
-        
-        if self.config.show_popup():
-            self.popup.set_result(text, language)
-        
-        # Выводим текст
-        self._output_text(text)
-    
-    def _handle_error(self, error: str):
-        """Обработка ошибки"""
-        self.tray.set_status(TrayStatus.ERROR)
-        self.tray.show_message("Ошибка", error)
-        
-        if self.config.show_popup():
-            self.popup.set_error(error)
-    
-    def _output_text(self, text: str):
-        """Вывод текста согласно настройкам"""
-        output_mode = self.config.get_output_mode()
-        
-        # Добавляем пробел если нужно
-        if self.config.get_add_space():
-            text = " " + text
-        
-        if output_mode in ["clipboard", "both"]:
-            pyperclip.copy(text)
-        
-        if output_mode in ["typein", "both"]:
-            from pynput import keyboard
-            controller = keyboard.Controller()
-            controller.type(text)
-            
-            if self.config.get_auto_paste():
-                controller.tap(keyboard.Key.enter)
     
     def _copy_text(self, text: str):
         """Копировать текст в буфер обмена"""
@@ -259,17 +167,9 @@ class GUIClient(QObject):
     
     def run(self):
         """Запустить GUI клиент"""
-        # Подключаем сигналы
-        self.transcription_ready.connect(self._handle_transcription)
-        self.transcription_error.connect(self._handle_error)
-        
-        # Запускаем горячие клавиши
         self.client.hotkey_manager.start()
-        
-        # Показываем tray
         self.tray.show()
         
-        # Сообщение о запуске
         if not self.config.start_minimized():
             self.tray.show_message(
                 "EchoType запущен",

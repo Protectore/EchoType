@@ -61,7 +61,7 @@ class CliClient(Client):
     def _on_recording_stop(self, audio_data: AudioData):
         """Callback при остановке записи"""
         self.message_queue.put(f"⏹️  Запись остановлена ({audio_data.duration:.1f} сек)")
-        threading.Thread(target=self._process_recording, args=(audio_data,), daemon=True).start()
+        threading.Thread(target=self.process_recording, args=(audio_data,), daemon=True).start()
     
     def _on_recording_error(self, error: str):
         """Callback при ошибке"""

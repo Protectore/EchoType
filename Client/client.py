@@ -87,26 +87,26 @@ class Client:
     
     # === Обработка записи ===
     
-    def _process_recording(self, audio_data: AudioData):
+    def process_recording(self, audio_data: AudioData):
         """Обработка записанного аудио"""
         try:
             tmp_path = audio_data.save_to_temp_wav()
             if not tmp_path:
-                logger.error("❌ Ошибка создания временного файла")
                 return
             
             logger.info("📡 Отправка на сервер...")
-            result = self._send_to_server(tmp_path)
+            result = self.send_to_server(tmp_path)
             
             os.unlink(tmp_path)
             
             if result:
-                self._handle_result(result)
+                self.handle_result(result)
+                return result
         
         except Exception as e:
             logger.error(f"❌ Ошибка обработки: {str(e)}")
     
-    def _send_to_server(self, audio_path: str) -> Optional[Dict[str, Any]]:
+    def send_to_server(self, audio_path: str) -> Optional[Dict[str, Any]]:
         """Отправка аудио файла на STT сервер"""
         try:
             with open(audio_path, 'rb') as audio_file:
@@ -127,7 +127,7 @@ class Client:
             logger.error(f"❌ Ошибка соединения: {str(e)}")
             return None
     
-    def _handle_result(self, result: Dict[str, Any]):
+    def handle_result(self, result: Dict[str, Any]):
         """Обработка результата транскрипции"""
         text = result.get('text', '').strip()
         language = result.get('language', 'unknown')

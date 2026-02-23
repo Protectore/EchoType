@@ -52,7 +52,7 @@ class AudioRecorder:
         self._on_recording_start: Optional[Callable[[], None]] = None
         self._on_recording_stop: Optional[Callable[[AudioData], None]] = None
         self._on_error: Optional[Callable[[str], None]] = None
-        self._on_level_update: Optional[Callable[[float], None]] = None
+        self._on_audio_update: Optional[Callable[[np.ndarray, AudioData], None]] = None
     
     # === Свойства ===
     
@@ -73,6 +73,18 @@ class AudioRecorder:
             return 0.0
         return time.time() - self._recording_start_time
     
+    @property
+    def audio_data(self) -> AudioData:
+        """Накопленные аудио-данные"""
+        audio_array = np.concatenate(self._audio_chunks, axis=0)
+        audio_data = AudioData(
+            samples=audio_array,
+            sample_rate=self.sample_rate,
+            channels=self.channels,
+            duration=self.duration
+        )
+        return audio_data
+    
     # === Настройка callback-ов ===
     
     def on_recording_start(self, callback: Callable[[], None]):
@@ -87,9 +99,9 @@ class AudioRecorder:
         """Установить callback на ошибку"""
         self._on_error = callback
     
-    def on_level_update(self, callback: Callable[[float], None]):
+    def on_audio_update(self, callback: Callable[[np.ndarray, AudioData], None]):
         """Установить callback для обновления уровня звука"""
-        self._on_level_update = callback
+        self._on_audio_update = callback
     
     # === Управление записью ===
     
@@ -129,7 +141,7 @@ class AudioRecorder:
         except Exception as e:
             self._state = RecordingState.IDLE
             error_msg = f"Ошибка начала записи: {e}"
-            print(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
             if self._on_error:
                 self._on_error(error_msg)
             return False
@@ -162,13 +174,7 @@ class AudioRecorder:
             return None
         
         try:
-            audio_array = np.concatenate(self._audio_chunks, axis=0)
-            audio_data = AudioData(
-                samples=audio_array,
-                sample_rate=self.sample_rate,
-                channels=self.channels,
-                duration=duration
-            )
+            audio_data = self.audio_data
             
             self._state = RecordingState.IDLE
             self._audio_chunks = []
@@ -182,7 +188,7 @@ class AudioRecorder:
         except Exception as e:
             self._state = RecordingState.IDLE
             error_msg = f"Ошибка обработки записи: {e}"
-            print(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
             if self._on_error:
                 self._on_error(error_msg)
             return None
@@ -208,9 +214,8 @@ class AudioRecorder:
             self._audio_chunks.append(indata.copy())
             
             # Вычисляем уровень звука для визуализации
-            if self._on_level_update:
-                level = np.abs(indata).mean()
-                self._on_level_update(float(level))
+            if self._on_audio_update:
+                self._on_audio_update(indata, self.audio_data)
     
     # === Статические методы ===
     

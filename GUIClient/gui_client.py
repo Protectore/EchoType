@@ -6,6 +6,7 @@ GUI клиент для EchoType
 import sys
 import os
 import threading
+import numpy as np
 import pyperclip
 from typing import Optional, Dict, Any
 
@@ -67,7 +68,7 @@ class GUIClient(QObject):
         self.client.audio_recorder.on_recording_start(self._on_recording_start)
         self.client.audio_recorder.on_recording_stop(self._on_recording_stop)
         self.client.audio_recorder.on_error(self._on_recording_error)
-        self.client.audio_recorder.on_level_update(self._on_audio_level)
+        self.client.audio_recorder.on_audio_update(self._on_audio_update)
     
     def _init_ui(self):
         """Инициализация UI компонентов"""
@@ -115,9 +116,10 @@ class GUIClient(QObject):
         if self.config.show_popup():
             self.popup.set_error(error)
     
-    def _on_audio_level(self, level: float):
-        """При обновлении уровня аудио"""
+    def _on_audio_update(self, indata: np.ndarray, audio_data: AudioData):
+        """При обновлении аудио"""
         if self.config.show_popup() and self.config.show_visualizer():
+            level = float(np.abs(indata).mean())
             self.popup.add_audio_level(level)
     
     # === Обработка аудио ===

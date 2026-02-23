@@ -4,55 +4,13 @@
 
 import threading
 from typing import Optional, Callable, Dict, Set, List, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 from pynput import keyboard
 from pynput.keyboard import Key, KeyCode
+from Client.HotkeyManager import HotkeyAction, HotkeyMode, HotkeyState
 from logger import get_logger
 
 
-logger = get_logger("HotkeyManager")
-
-
-
-class HotkeyMode(Enum):
-    """Режимы работы горячей клавиши"""
-    TOGGLE = "toggle"          # Нажатие включает/выключает
-    PUSH_TO_TALK = "ptt"       # Удержание для записи
-
-
-@dataclass
-class HotkeyAction:
-    """Описание действия горячей клавиши"""
-    name: str                              # Имя действия
-    keys: Tuple[keyboard.Key | keyboard.KeyCode, ...]  # Комбинация клавиш
-    callback: Callable[[], None]           # Функция при активации
-    mode: HotkeyMode = HotkeyMode.TOGGLE   # Режим работы
-    description: str = ""                  # Описание для UI
-    on_release: Optional[Callable[[], None]] = None  # Для PTT - при отпускании
-
-
-@dataclass
-class HotkeyState:
-    """Состояние отслеживания клавиш"""
-    pressed_keys: Set[ keyboard.Key | keyboard.KeyCode] = field(default_factory=set)
-    active_hotkey: Optional[str] = None
-
-    def add_key(self, key: keyboard.Key | keyboard.KeyCode) -> None:
-        logger.info(type(key))
-        if isinstance(key, keyboard.KeyCode) and key.char:
-            # Скипаем управляющие символы (Ctrl+A и т.д.)
-            if not key.char.isalnum() or key.char.isupper():
-                logger.debug(f"Skipped {key.char=}")
-                return
-
-        self.pressed_keys.add(key)
-    
-    def discard_key(self, key: keyboard.Key | keyboard.KeyCode) -> None:
-        self.pressed_keys.discard(key)
-
-    def clear(self) -> None:
-        self.pressed_keys.clear()
+logger = get_logger(__name__)
 
 
 class HotkeyManager:

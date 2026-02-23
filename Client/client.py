@@ -15,7 +15,7 @@ from pynput import keyboard
 
 from config_manager import ConfigManager
 from Client.AudioRecorder import AudioRecorder, AudioData
-from Client.hotkey_manager import HotkeyManager, HotkeyMode
+from Client.HotkeyManager import HotkeyManager, HotkeyMode
 
 
 class Client:

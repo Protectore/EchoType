@@ -1,21 +1,21 @@
 """
-Консольный клиент для записи голоса по горячим клавишам
+Клиент EchoType. Предоставляет интерфейс для управления менеджером горячих клавиш, аудио-рекордером и взаимодействия с сервером
 """
 
 import os
-import sys
-import time
-import threading
-import queue
 import pyperclip
 from typing import Optional, Dict, Any
-
 import requests
 from pynput import keyboard
 
 from config_manager import ConfigManager
 from Client.AudioRecorder import AudioRecorder, AudioData
 from Client.HotkeyManager import HotkeyManager, HotkeyMode
+
+from logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class Client:
@@ -37,14 +37,8 @@ class Client:
         self._init_audio_recorder()
         self.init_hotkey_manager()
         
-        # Очередь для сообщений
-        self.message_queue = queue.Queue()
-        
         # Контроллер для ввода текста
-        self.controller = keyboard.Controller()
-        
-        # Флаг работы
-        self._running = False
+        self.keyboard = keyboard.Controller()
     
     def _init_audio_recorder(self):
         """Инициализация аудио рекордера"""
@@ -54,11 +48,6 @@ class Client:
             device=self.config.get_audio_device()
         )
         
-        # Устанавливаем callbacks
-        self.audio_recorder.on_recording_start(self._on_recording_start)
-        self.audio_recorder.on_recording_stop(self._on_recording_stop)
-        self.audio_recorder.on_error(self._on_recording_error)
-    
     def init_hotkey_manager(self):
         """Инициализация менеджера горячих клавиш"""
         self.hotkey_manager = HotkeyManager()
@@ -79,42 +68,7 @@ class Client:
             description=self.config.get('hotkeys.record.description', 'Запись голоса'),
             on_release=on_release
         )
-        
-        # Регистрируем дополнительные горячие клавиши из конфигурации
-        hotkeys = self.config.get_hotkeys()
-        for name, settings in hotkeys.items():
-            if name != 'record' and isinstance(settings, dict):
-                keys = settings.get('keys')
-                mode = settings.get('mode', 'toggle')
-                description = settings.get('description', '')
-                
-                if keys:
-                    self.hotkey_manager.register(
-                        name=name,
-                        keys=keys,
-                        callback=lambda n=name: self._custom_action(n),
-                        mode=HotkeyMode.PUSH_TO_TALK if mode == 'ptt' else HotkeyMode.TOGGLE,
-                        description=description
-                    )
-    
-    # === Callbacks для AudioRecorder ===
-    
-    def _on_recording_start(self):
-        """Callback при начале записи"""
-        self.message_queue.put("🎤 Запись начата...")
-        # Запускаем таймер
-        threading.Thread(target=self._recording_timer, daemon=True).start()
-    
-    def _on_recording_stop(self, audio_data: AudioData):
-        """Callback при остановке записи"""
-        self.message_queue.put(f"⏹️  Запись остановлена ({audio_data.duration:.1f} сек)")
-        # Обрабатываем запись в отдельном потоке
-        threading.Thread(target=self._process_recording, args=(audio_data,), daemon=True).start()
-    
-    def _on_recording_error(self, error: str):
-        """Callback при ошибке"""
-        self.message_queue.put(f"❌ Ошибка: {error}")
-    
+
     # === Управление записью ===
     
     def start_recording(self):
@@ -131,43 +85,26 @@ class Client:
         """Переключить запись (для Toggle режима)"""
         self.audio_recorder.toggle_recording()
     
-    def _custom_action(self, action_name: str):
-        """Выполнить кастомное действие"""
-        # Здесь можно добавить обработку дополнительных действий
-        self.message_queue.put(f"⚡ Действие: {action_name}")
-    
-    def _recording_timer(self):
-        """Таймер записи для отображения длительности"""
-        while self.audio_recorder.is_recording:
-            elapsed = self.audio_recorder.duration
-            sys.stdout.write(f"\r⏱️  Запись: {elapsed:.1f} сек")
-            sys.stdout.flush()
-            time.sleep(0.1)
-        print()  # Новая строка после остановки
-    
     # === Обработка записи ===
     
     def _process_recording(self, audio_data: AudioData):
         """Обработка записанного аудио"""
         try:
-            # Сохраняем во временный файл
             tmp_path = audio_data.save_to_temp_wav()
             if not tmp_path:
-                self.message_queue.put("❌ Ошибка создания временного файла")
+                logger.error("❌ Ошибка создания временного файла")
                 return
             
-            # Отправляем на сервер
-            self.message_queue.put("📡 Отправка на сервер...")
+            logger.info("📡 Отправка на сервер...")
             result = self._send_to_server(tmp_path)
             
-            # Удаляем временный файл
             os.unlink(tmp_path)
             
             if result:
                 self._handle_result(result)
         
         except Exception as e:
-            self.message_queue.put(f"❌ Ошибка обработки: {str(e)}")
+            logger.error(f"❌ Ошибка обработки: {str(e)}")
     
     def _send_to_server(self, audio_path: str) -> Optional[Dict[str, Any]]:
         """Отправка аудио файла на STT сервер"""
@@ -183,11 +120,11 @@ class Client:
             if response.status_code == 200:
                 return response.json()
             else:
-                self.message_queue.put(f"❌ Ошибка сервера: {response.status_code}")
+                logger.error(f"❌ Ошибка сервера: {response.status_code}")
                 return None
         
         except requests.exceptions.RequestException as e:
-            self.message_queue.put(f"❌ Ошибка соединения: {str(e)}")
+            logger.error(f"❌ Ошибка соединения: {str(e)}")
             return None
     
     def _handle_result(self, result: Dict[str, Any]):
@@ -196,93 +133,25 @@ class Client:
         language = result.get('language', 'unknown')
         
         if not text:
-            self.message_queue.put("⚠️  Текст не распознан")
+            logger.warning("⚠️ Текст не распознан")
             return
         
         # Добавляем пробел если нужно
         if self.add_space:
             text = " " + text
         
-        # Выводим результат
-        print(f"\n📝 Результат ({language}):")
-        print(f"┌{'─' * (len(text) + 2)}┐")
-        print(f"│ {text} │")
-        print(f"└{'─' * (len(text) + 2)}┘")
-        
-        self.message_queue.put(f"✅ Текст распознан: {text[:50]}..." if len(text) > 50 else f"✅ Текст распознан")
+        logger.info(f"✅ Текст распознан: {language=}, '{text[:50]}...'" if len(text) > 50 else f"✅ Текст распознан: {language=}, '{text}'")
         
         # Действия в зависимости от режима вывода
         if self.output_mode in ["clipboard", "both"]:
             pyperclip.copy(text)
-            self.message_queue.put("📋 Текст скопирован в буфер обмена")
+            logger.info("📋 Текст скопирован в буфер обмена")
         
         if self.output_mode in ["typein", "both"]:
-            self.message_queue.put("⌨️ Текст отправлен в ввод")
+            logger.info("⌨️ Текст отправлен в ввод")
             self.hotkey_manager.stop()
-            self.controller.type(text)
+            self.keyboard.type(text)
             
             if self.auto_paste:
-                self.controller.tap(keyboard.Key.enter)
+                self.keyboard.tap(keyboard.Key.enter)
             self.hotkey_manager.start()
-    
-    # === Обработка сообщений ===
-    
-    def _process_messages(self):
-        """Обработка сообщений из очереди"""
-        while self._running:
-            try:
-                message = self.message_queue.get(timeout=0.1)
-                print(f"\n{message}")
-            except queue.Empty:
-                pass
-    
-    # === Основной цикл ===
-    
-    def run(self):
-        """Основной цикл клиента"""
-        self._running = True
-        
-        # Запускаем менеджер горячих клавиш
-        self.hotkey_manager.start()
-        
-        # Запускаем поток для обработки сообщений
-        message_thread = threading.Thread(target=self._process_messages, daemon=True)
-        message_thread.start()
-        
-        # Основной цикл
-        try:
-            print("✅ Клиент запущен. Ожидание нажатия клавиши...")
-            
-            # Держим основной поток живым
-            while self._running:
-                time.sleep(0.1)
-        
-        except KeyboardInterrupt:
-            pass
-        
-        finally:
-            self.stop()
-    
-    def stop(self):
-        """Остановить клиент"""
-        self._running = False
-        
-        # Останавливаем запись если идёт
-        if self.audio_recorder.is_recording:
-            self.audio_recorder.stop_recording()
-        
-        # Останавливаем менеджер горячих клавиш
-        self.hotkey_manager.stop()
-        
-        print("\n👋 Клиент остановлен")
-
-
-def main():
-    """Точка входа консольного клиента"""
-    config = ConfigManager()
-    client = Client(config)
-    client.run()
-
-
-if __name__ == "__main__":
-    main()

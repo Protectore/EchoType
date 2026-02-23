@@ -254,13 +254,8 @@ class GUIClient(QObject):
     
     def _quit(self):
         """Завершить работу"""
-        self.client.stop()
-        
-        # Скрываем UI
         self.popup.hide()
         self.tray.hide()
-        
-        # Завершаем приложение
         self.app.quit() # type: ignore
     
     def run(self):

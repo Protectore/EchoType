@@ -91,10 +91,6 @@ class PopupWindow(QWidget):
         buttons_layout.setSpacing(8)
         
         layout.addLayout(buttons_layout)
-
-        # Попытка пофиксить баг: окно отказывается появляться при вызове show
-        # self.show()
-        # self.hide()
     
     def _init_position(self):
         """Инициализация позиции окна"""
@@ -154,6 +150,9 @@ class PopupWindow(QWidget):
         logger.debug("Setting popup info")
         self.status_label.setText("🎤 Запись...")
         self.status_label.setProperty("class", "recording")
+        self.timer_label.reset()
+        self.timer_label.start()
+        self.visualizer.clear()
         self.text_preview.setText("Текст появится здесь...")
         self.text_preview.setProperty("class", "")
         

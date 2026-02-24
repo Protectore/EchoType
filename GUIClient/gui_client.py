@@ -5,9 +5,12 @@ GUI клиент для EchoType
 import sys
 import numpy as np
 from typing import Optional
+import pathlib
+
+from PyQt6.QtMultimedia import QSoundEffect
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, QThread, pyqtSignal, QUrl
 
 from Client import Client
 from Client.AudioRecorder import AudioData
@@ -75,6 +78,25 @@ class GUIClient(QObject):
         self.settings_window: Optional[SettingsWindow] = None
 
         self.recording_start.connect(self._process_on_recording_start)
+        
+        # Инициализация звуковых эффектов
+        self._init_sounds()
+
+    def _init_sounds(self):
+        """Инициализация звуковых эффектов"""
+        gui_client_dir = pathlib.Path(__file__).parent.resolve()
+        start_sound_path = gui_client_dir / "SFX" / "record_start.wav"
+        end_sound_path = gui_client_dir / "SFX" / "record_end.wav"
+
+        start_sound_url = QUrl.fromLocalFile(str(start_sound_path))
+        self.recording_start_sound = QSoundEffect()
+        self.recording_start_sound.setSource(start_sound_url)
+        self.recording_start_sound.setVolume(0.5)
+        
+        end_sound_url = QUrl.fromLocalFile(str(end_sound_path))
+        self.recording_end_sound = QSoundEffect()
+        self.recording_end_sound.setSource(end_sound_url)
+        self.recording_end_sound.setVolume(0.5)
 
     # === Callbacks ===
     
@@ -84,6 +106,7 @@ class GUIClient(QObject):
     def _process_on_recording_start(self):
         """При начале записи"""
         self.tray.set_status(TrayStatus.RECORDING)
+        self.recording_start_sound.play()
 
         if self.config.show_popup():
             self.popup.start_recording()
@@ -92,6 +115,7 @@ class GUIClient(QObject):
     def _on_recording_stop(self, audio_data: AudioData):
         """При остановке записи"""
         self.tray.set_status(TrayStatus.PROCESSING)
+        self.recording_end_sound.play()
         
         if self.config.show_popup():
             self.popup.stop_recording()

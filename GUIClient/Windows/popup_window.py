@@ -33,6 +33,7 @@ class PopupWindow(QWidget):
         self.config = config
         
         self._init_ui()
+        self._init_animations()
         self.setStyleSheet(GuiUtility.read_style_file("popup_window"))
         self._init_position()
         
@@ -45,6 +46,10 @@ class PopupWindow(QWidget):
         
         # Прозрачный фон
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+
+        self.fade_out_delay_timer = QTimer(self)
+        self.fade_out_delay_timer.setSingleShot(True)
+        self.fade_out_delay_timer.timeout.connect(lambda: self._start_fade_out_animation(300))
     
     def _init_ui(self):
         """Инициализация UI"""
@@ -92,6 +97,20 @@ class PopupWindow(QWidget):
         
         layout.addLayout(buttons_layout)
     
+    def _init_animations(self, fade_in_duration_ms: int = 300, fade_out_duration_ms: int = 300):
+        self.fade_in_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_in_animation.setDuration(fade_in_duration_ms)
+        self.fade_in_animation.setStartValue(0.0)
+        self.fade_in_animation.setEndValue(1.0)
+        self.fade_in_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+
+        self.fade_out_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_out_animation.setDuration(fade_out_duration_ms)
+        self.fade_out_animation.setStartValue(1.0)
+        self.fade_out_animation.setEndValue(0.0)
+        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_out_animation.finished.connect(self._hide_after_animation)
+
     def _init_position(self):
         """Инициализация позиции окна"""
         position = self.config.get_popup_position()
@@ -149,30 +168,14 @@ class PopupWindow(QWidget):
         """Плавное появление окна"""
         self.setWindowOpacity(0.0)
         self.show()
-
-        self.fade_in_animation = QPropertyAnimation(self, b"windowOpacity")
-        self.fade_in_animation.setDuration(duration_ms)
-        self.fade_in_animation.setStartValue(0.0)
-        self.fade_in_animation.setEndValue(1.0)
-        self.fade_in_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.fade_in_animation.start()
     
-    def fade_out(self, duration_ms: int = 300, delay_ms: int = 2000):
+    def fade_out(self, delay_ms: int = 2000):
         """Плавное сокрытие окна"""
-        # Добавляем задержку перед началом анимации сокрытия
-        delay_timer = QTimer(self)
-        delay_timer.setSingleShot(True)
-        delay_timer.timeout.connect(lambda: self._start_fade_out_animation(duration_ms))
-        delay_timer.start(delay_ms)
+        self.fade_out_delay_timer.start(delay_ms)
     
     def _start_fade_out_animation(self, duration_ms: int):
         """Запуск анимации сокрытия после задержки"""
-        self.fade_out_animation = QPropertyAnimation(self, b"windowOpacity")
-        self.fade_out_animation.setDuration(duration_ms)
-        self.fade_out_animation.setStartValue(1.0)
-        self.fade_out_animation.setEndValue(0.0)
-        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
-        self.fade_out_animation.finished.connect(self._hide_after_animation)
         self.fade_out_animation.start()
     
     def _hide_after_animation(self):
@@ -195,7 +198,10 @@ class PopupWindow(QWidget):
         
         logger.debug("Showing popup window")
         self._init_position()
-        self.fade_in()
+        self.fade_out_delay_timer.stop()
+        self.fade_out_animation.stop()
+        if not self.isVisible():
+            self.fade_in()
         logger.debug("Popup window is shown")
     
     def stop_recording(self):

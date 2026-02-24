@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QFrame, QApplication
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
 
 from GUIClient.Widgets import TimerLabel, AudioVisualizer
 from GUIClient.utility import GuiUtility
@@ -143,6 +143,43 @@ class PopupWindow(QWidget):
             y = geometry.bottom() - self.height() - 20
             self.move(x, y)
     
+    # === Анимации ===
+    
+    def fade_in(self, duration_ms: int = 300):
+        """Плавное появление окна"""
+        self.setWindowOpacity(0.0)
+        self.show()
+
+        self.fade_in_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_in_animation.setDuration(duration_ms)
+        self.fade_in_animation.setStartValue(0.0)
+        self.fade_in_animation.setEndValue(1.0)
+        self.fade_in_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_in_animation.start()
+    
+    def fade_out(self, duration_ms: int = 300, delay_ms: int = 2000):
+        """Плавное сокрытие окна"""
+        # Добавляем задержку перед началом анимации сокрытия
+        delay_timer = QTimer(self)
+        delay_timer.setSingleShot(True)
+        delay_timer.timeout.connect(lambda: self._start_fade_out_animation(duration_ms))
+        delay_timer.start(delay_ms)
+    
+    def _start_fade_out_animation(self, duration_ms: int):
+        """Запуск анимации сокрытия после задержки"""
+        self.fade_out_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_out_animation.setDuration(duration_ms)
+        self.fade_out_animation.setStartValue(1.0)
+        self.fade_out_animation.setEndValue(0.0)
+        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_out_animation.finished.connect(self._hide_after_animation)
+        self.fade_out_animation.start()
+    
+    def _hide_after_animation(self):
+        """Скрыть окно после завершения анимации"""
+        self.hide()
+        self.closed.emit()
+    
     # === Публичные методы ===
     
     def start_recording(self):
@@ -158,7 +195,7 @@ class PopupWindow(QWidget):
         
         logger.debug("Showing popup window")
         self._init_position()
-        self.show()
+        self.fade_in()
         logger.debug("Popup window is shown")
     
     def stop_recording(self):
@@ -198,11 +235,9 @@ class PopupWindow(QWidget):
     def mousePressEvent(self, event):
         """Закрытие по клику вне окна"""
         if event.button() == Qt.MouseButton.RightButton:
-            self.hide()
-            self.closed.emit()
+            self.fade_out()
     
     def keyPressEvent(self, event):
         """Закрытие по Escape"""
         if event.key() == Qt.Key.Key_Escape:
-            self.hide()
-            self.closed.emit()
+            self.fade_out()

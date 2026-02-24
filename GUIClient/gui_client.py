@@ -107,6 +107,8 @@ class GUIClient(QObject):
         
         self.processing_thread.run = thread_func
         self.processing_thread.finished.connect(self.processing_thread.deleteLater)
+        self.processing_thread.finished.connect(self.popup.fade_out)
+
         self.processing_thread.start()
 
     def _on_recording_error(self, error: str):

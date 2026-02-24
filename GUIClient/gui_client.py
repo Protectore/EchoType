@@ -72,7 +72,7 @@ class GUIClient(QObject):
         self.tray.quit_requested.connect(self._quit)
         
         # Popup окно
-        self.popup = PopupWindow(self.config)
+        self.popup = PopupWindow()
         
         # Окно настроек (создаётся по требованию)
         self.settings_window: Optional[SettingsWindow] = None

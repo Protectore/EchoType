@@ -198,14 +198,6 @@ class SettingsWindow(QDialog):
         self.show_popup_check = QCheckBox("Показывать при записи")
         form.addRow(self.show_popup_check)
         
-        self.popup_position_combo = QComboBox()
-        self.popup_position_combo.addItems([
-            "У курсора",
-            "По центру",
-            "В углу"
-        ])
-        form.addRow("Позиция:", self.popup_position_combo)
-        
         self.show_timer_check = QCheckBox("Показывать таймер")
         form.addRow(self.show_timer_check)
         
@@ -325,11 +317,7 @@ class SettingsWindow(QDialog):
         
         # GUI
         self.show_popup_check.setChecked(self.config.show_popup())
-        
-        position = self.config.get_popup_position()
-        pos_idx = {"cursor": 0, "center": 1, "corner": 2}.get(position, 0)
-        self.popup_position_combo.setCurrentIndex(pos_idx)
-        
+
         self.show_timer_check.setChecked(self.config.show_timer())
         self.show_visualizer_check.setChecked(self.config.show_visualizer())
         self.minimize_to_tray_check.setChecked(self.config.minimize_to_tray())
@@ -372,9 +360,6 @@ class SettingsWindow(QDialog):
         
         # GUI
         self.config.set('gui.show_popup', self.show_popup_check.isChecked())
-        
-        positions = ['cursor', 'center', 'corner']
-        self.config.set('gui.popup_position', positions[self.popup_position_combo.currentIndex()])
         
         self.config.set('gui.show_timer', self.show_timer_check.isChecked())
         self.config.set('gui.show_visualizer', self.show_visualizer_check.isChecked())

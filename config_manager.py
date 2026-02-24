@@ -212,7 +212,6 @@ class ConfigManager:
         defaults = {
             'enabled': True,
             'show_popup': True,
-            'popup_position': 'cursor',
             'show_timer': True,
             'show_visualizer': True,
             'minimize_to_tray': True,
@@ -224,10 +223,6 @@ class ConfigManager:
     def show_popup(self) -> bool:
         """Показывать ли popup при записи"""
         return self.get('gui.show_popup', True)
-    
-    def get_popup_position(self) -> str:
-        """Получить позицию popup окна"""
-        return self.get('gui.popup_position', 'cursor')
     
     def show_timer(self) -> bool:
         """Показывать ли таймер записи"""

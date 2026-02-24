@@ -27,10 +27,8 @@ class PopupWindow(QWidget):
     
     closed = pyqtSignal()
     
-    def __init__(self, config: ConfigManager, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        
-        self.config = config
         
         self._init_ui()
         self._init_animations()
@@ -113,14 +111,7 @@ class PopupWindow(QWidget):
 
     def _init_position(self):
         """Инициализация позиции окна"""
-        position = self.config.get_popup_position()
-        
-        if position == "center":
-            self._center_on_screen()
-        elif position == "cursor":
-            self._position_at_cursor()
-        else:  # corner
-            self._position_at_corner()
+        self._center_on_screen()
         logger.debug(f"Popup position is set to {self.x()}, {self.y()}")
     
     def _center_on_screen(self):
@@ -131,35 +122,6 @@ class PopupWindow(QWidget):
             geometry = screen.geometry()
             x = (geometry.width() - self.width()) // 2
             y = (geometry.height() - self.height()) * 98 // 100
-            self.move(x, y)
-    
-    def _position_at_cursor(self):
-        """Расположить окно рядом с курсором"""
-        from PyQt6.QtGui import QCursor
-        cursor_pos = QCursor.pos()
-        
-        # Смещение чтобы не перекрывать курсор
-        x = cursor_pos.x() + 20
-        y = cursor_pos.y() + 20
-        
-        # Проверяем границы экрана
-        screen = QApplication.primaryScreen()
-        if screen:
-            geometry = screen.geometry()
-            if x + self.width() > geometry.right():
-                x = cursor_pos.x() - self.width() - 20
-            if y + self.height() > geometry.bottom():
-                y = cursor_pos.y() - self.height() - 20
-        
-        self.move(x, y)
-    
-    def _position_at_corner(self):
-        """Расположить окно в углу экрана"""
-        screen = QApplication.primaryScreen()
-        if screen:
-            geometry = screen.geometry()
-            x = geometry.right() - self.width() - 20
-            y = geometry.bottom() - self.height() - 20
             self.move(x, y)
     
     # === Анимации ===

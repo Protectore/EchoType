@@ -29,9 +29,6 @@ class Client:
         
         # Настройки из конфигурации
         self.server_url = config.get_server_url()
-        self.output_mode = config.get_output_mode()
-        self.auto_paste = config.get_auto_paste()
-        self.add_space = config.get_add_space()
         
         # Инициализируем компоненты
         self._init_audio_recorder()
@@ -39,6 +36,21 @@ class Client:
         
         # Контроллер для ввода текста
         self.keyboard = keyboard.Controller()
+    
+    @property
+    def output_mode(self):
+        """Режим вывода текста (clipboard, typein, both)"""
+        return self.config.get_output_mode()
+    
+    @property
+    def auto_paste(self):
+        """Автоматическая вставка текста после ввода"""
+        return self.config.get_auto_paste()
+    
+    @property
+    def add_space(self):
+        """Добавлять пробел перед распознанным текстом"""
+        return self.config.get_add_space()
     
     def _init_audio_recorder(self):
         """Инициализация аудио рекордера"""

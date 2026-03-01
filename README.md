@@ -1,6 +1,6 @@
 # EchoType
 
-**EchoType** — a client-server application for Speech-to-Text based on faster-whisper and inspired by AquaVoice.
+**EchoType** — a client-server application for Speech-to-Text based on [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and inspired by [AquaVoice](https://aquavoice.com/).
 
 ## Features
 
@@ -181,4 +181,5 @@ MIT
 ## Support
 
 You can support project/developer on [DonationAlerts](https://www.donationalerts.com/r/protectoreh). Thank you!
+
 

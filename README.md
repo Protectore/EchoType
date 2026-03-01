@@ -14,19 +14,15 @@
 
 ```mermaid
 flowchart TB
-    subgraph Client[GUI Client]
+    subgraph GUI[GUIClient]
         TRAY[Tray Applet]
         POPUP[Popup Window]
         SETTINGS[Settings Window]
         
-        subgraph Hotkeys[Hotkey Manager]
-            PTT[Push-to-Talk]
-            TOGGLE[Toggle Mode]
-        end
-        
-        subgraph Audio[Audio Module]
+        subgraph Core[Client - Core Logic]
+            HK[HotkeyManager]
             REC[AudioRecorder]
-            VIZ[Visualizer]
+            HTTP[HTTP Client]
         end
     end
     
@@ -43,11 +39,16 @@ flowchart TB
     
     TRAY --> POPUP
     TRAY --> SETTINGS
-    Hotkeys --> Audio
-    Audio -->|HTTP POST| API
+    TRAY --> Core
+    POPUP --> Core
+    
+    HK -->|triggers| REC
+    REC -->|audio data| HTTP
+    HTTP -->|POST /transcribe| API
     API --> WH
+    
     CM --> YAML
-    CM --> Client
+    CM --> GUI
     CM --> Server
 ```
 
@@ -56,10 +57,10 @@ flowchart TB
 | Component | File | Description |
 |-----------|------|-------------|
 | [`STTServer`](STTServer/stt_server.py) | STTServer/stt_server.py | FastAPI server with Whisper model |
-| [`Client`](Client/client.py) | Client/client.py | Client for voice recording and server communication |
-| [`GUIClient`](GUIClient/gui_client.py) | GUIClient/gui_client.py | PyQt6-based GUI client |
-| [`AudioRecorder`](Client/AudioRecorder/audio_recorder.py) | Client/AudioRecorder/ | Audio recording module |
-| [`HotkeyManager`](Client/HotkeyManager/hotkey_manager.py) | Client/HotkeyManager/ | Hotkey management module |
+| [`GUIClient`](GUIClient/gui_client.py) | GUIClient/gui_client.py | PyQt6-based GUI client, uses Client internally |
+| [`Client`](Client/client.py) | Client/client.py | Core client logic, coordinates HotkeyManager, AudioRecorder and server communication |
+| [`HotkeyManager`](Client/HotkeyManager/hotkey_manager.py) | Client/HotkeyManager/ | Hotkey management with PTT and Toggle modes |
+| [`AudioRecorder`](Client/AudioRecorder/audio_recorder.py) | Client/AudioRecorder/ | Audio recording from microphone |
 | [`ConfigManager`](config_manager.py) | config_manager.py | Singleton configuration manager |
 
 ## Project Structure

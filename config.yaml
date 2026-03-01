@@ -7,12 +7,7 @@ client:
   auto_paste: false
   output_mode: clipboard
 gui:
-  autostart: false
-  enabled: true
-  minimize_to_tray: true
-  popup_position: center
   show_popup: true
-  start_minimized: false
 hotkeys:
   record:
     description: Начать/остановить запись

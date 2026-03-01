@@ -156,9 +156,7 @@ hotkeys:
 
 # GUI
 gui:
-  enabled: true
   show_popup: true
-  show_visualizer: true
 ```
 
 ## Recording Modes

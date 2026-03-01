@@ -191,10 +191,9 @@ class GUIClient(QObject):
         self.client.hotkey_manager.start()
         self.tray.show()
         
-        if not self.config.start_minimized():
-            self.tray.show_message(
-                "EchoType запущен",
-                "Нажмите горячую клавишу для записи"
-            )
+        self.tray.show_message(
+            "EchoType запущен",
+            "Нажмите горячую клавишу для записи"
+        )
         
         return self.app.exec() # type: ignore

@@ -203,10 +203,6 @@ class ConfigManager:
     
     # === Методы для GUI ===
     
-    def is_gui_enabled(self) -> bool:
-        """Проверить, включен ли GUI"""
-        return self.get('gui.enabled', True)
-    
     def get_gui_settings(self) -> Dict[str, Any]:
         """Получить все настройки GUI"""
         defaults = {
@@ -223,18 +219,6 @@ class ConfigManager:
     def show_popup(self) -> bool:
         """Показывать ли popup при записи"""
         return self.get('gui.show_popup', True)
-    
-    def minimize_to_tray(self) -> bool:
-        """Сворачивать ли в трей при закрытии"""
-        return self.get('gui.minimize_to_tray', True)
-    
-    def start_minimized(self) -> bool:
-        """Запускать ли свернутым"""
-        return self.get('gui.start_minimized', False)
-    
-    def is_autostart_enabled(self) -> bool:
-        """Включен ли автозапуск"""
-        return self.get('gui.autostart', False)
     
     # === Методы для изменения конфигурации ===
     

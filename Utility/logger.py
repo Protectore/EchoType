@@ -3,7 +3,7 @@ from rich.logging import RichHandler
 from rich.console import Console
 
 
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.ERROR
 
 
 def get_logger(name, log_file_name="EchoType.log"):

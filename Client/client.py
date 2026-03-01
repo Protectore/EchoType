@@ -26,9 +26,6 @@ class Client:
     def __init__(self, config: ConfigManager):
         self.config = config
         
-        # Настройки из конфигурации
-        self.server_url = config.get_server_url()
-        
         # Инициализируем компоненты
         self._init_audio_recorder()
         self.init_hotkey_manager()
@@ -50,6 +47,11 @@ class Client:
     def add_space(self):
         """Добавлять пробел перед распознанным текстом"""
         return self.config.get_add_space()
+    
+    @property
+    def server_url(self):
+        """Server URL from config"""
+        return self.config.get_server_url()
     
     def _init_audio_recorder(self):
         """Инициализация аудио рекордера"""

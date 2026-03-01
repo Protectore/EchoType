@@ -81,6 +81,17 @@ class Client:
             on_release=on_release
         )
 
+        # Альтернативный инпут для решения проблемы с вводом alt_gr на русской раскладке Windows
+        if (record_keys == "alt_gr"):
+            self.hotkey_manager.register(
+            name='record_alt_ru',
+            keys="ctrl_l+alt_gr",
+            callback=callback,
+            mode=mode,
+            description="Альтернативный инпут для решения проблемы с вводом alt_gr на русской раскладке Windows",
+            on_release=on_release
+        )
+
     # === Управление записью ===
     
     def start_recording(self):

@@ -91,7 +91,6 @@ class SettingsWindow(QDialog):
         info_label = QLabel(
             "💡 Toggle: одно нажатие начинает запись, повторное - останавливает.\n"
             "💡 Push-to-Talk: запись идёт пока клавиша нажата.\n"
-            "⚠️ Инвалидность pyqt не позволяет ему различать левый альт от правого, но под капотом оно работает! Т.е. при нажатии alt_gr, на экране будет написано alt, но обработка будет повешена именно на правый альт"
         )
         info_label.setStyleSheet("color: #888; font-size: 11px;")
         info_label.setWordWrap(True)
@@ -260,9 +259,7 @@ class SettingsWindow(QDialog):
         """Загрузить настройки в UI"""
         # Горячие клавиши
         record_keys = self.config.get_hotkey_keys('record')
-        self.record_hotkey_edit.setKeySequence(
-            QKeySequence(record_keys.replace("_", "+"))
-        )
+        self.record_hotkey_edit.setHotkeyFromString(record_keys)
         
         record_mode = self.config.get_hotkey_mode('record')
         self.record_mode_combo.setCurrentIndex(0 if record_mode == 'toggle' else 1)

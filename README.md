@@ -23,11 +23,11 @@ flowchart TB
             HK[HotkeyManager]
             REC[AudioRecorder]
             HTTP[HTTP Client]
+            ACTION[Action]
         end
     end
     
     subgraph Server[STT Server]
-        STT[STTServer]
         WH[WhisperModel]
         API[REST API]
     end
@@ -46,6 +46,8 @@ flowchart TB
     REC -->|audio data| HTTP
     HTTP -->|POST /transcribe| API
     API --> WH
+
+    WH -->|transcription|ACTION
     
     CM --> YAML
     CM --> GUI
@@ -175,3 +177,4 @@ Press the key to start recording. Press again to stop.
 ## License
 
 MIT
+

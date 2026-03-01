@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QLabel
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 
-from logger import get_logger
+from Utility import get_logger
 
 
 logger  = get_logger(__name__)

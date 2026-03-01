@@ -9,7 +9,7 @@ import sounddevice as sd
 
 from Client.AudioRecorder.audio_data import AudioData
 from Client.AudioRecorder.recording_state import RecordingState
-from logger import get_logger
+from Utility import get_logger
 
 
 logger = get_logger(__name__)

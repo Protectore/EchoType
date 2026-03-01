@@ -1,5 +1,5 @@
 from STTServer.stt_server import STTServer
-from config_manager import ConfigManager
+from Utility import ConfigManager
 
 
 if __name__ == "__main__":

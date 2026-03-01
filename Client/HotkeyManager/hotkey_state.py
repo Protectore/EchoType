@@ -1,7 +1,7 @@
 from typing import Optional, Set
 from dataclasses import dataclass, field
 from pynput import keyboard
-from logger import get_logger
+from Utility import get_logger
 
 
 logger = get_logger(__name__)

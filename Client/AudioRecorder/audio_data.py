@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 import soundfile as sf
 
-from logger import get_logger
+from Utility import get_logger
 
 
 logger = get_logger(__name__)

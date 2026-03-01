@@ -27,8 +27,8 @@ class ConfigManager:
     def __init__(self):
         """Инициализация - загружает конфигурацию только при первом вызове"""
         if not self._initialized:
-            # По умолчанию ищем config.yaml в текущей директории
-            parent_dir = Path(__file__).resolve().parent
+            # Trying to search config.yaml in dir level above (project root)
+            parent_dir = Path(__file__).resolve().parent.parent
             self._config_path = Path.joinpath(parent_dir, "config.yaml").absolute().as_posix()
             self.load()
             self._initialized = True

@@ -8,11 +8,10 @@ from typing import Optional, Dict, Any
 import requests
 from pynput import keyboard
 
-from config_manager import ConfigManager
 from Client.AudioRecorder import AudioRecorder, AudioData
 from Client.HotkeyManager import HotkeyManager, HotkeyMode
 
-from logger import get_logger
+from Utility import ConfigManager, get_logger
 
 
 logger = get_logger(__name__)

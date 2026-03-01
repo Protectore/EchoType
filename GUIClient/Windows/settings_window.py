@@ -12,11 +12,9 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QKeySequence
 
 from GUIClient.Widgets.hotkey_edit import HotkeyEdit
-from config_manager import ConfigManager
 from Client.AudioRecorder import AudioRecorder
 
-
-from logger import get_logger
+from Utility import ConfigManager, get_logger
 
 
 logger = get_logger(__name__)

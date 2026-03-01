@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent, QKeySequence
 
-from logger import get_logger
+from Utility import get_logger
 
 
 logger = get_logger(__name__)

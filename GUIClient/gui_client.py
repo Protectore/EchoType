@@ -17,8 +17,7 @@ from Client.AudioRecorder import AudioData
 from GUIClient.TrayApp import TrayApp, TrayStatus
 from GUIClient.Windows import PopupWindow, SettingsWindow
 
-from config_manager import ConfigManager
-from logger import get_logger
+from Utility import ConfigManager, get_logger
 
 
 logger = get_logger(__name__)

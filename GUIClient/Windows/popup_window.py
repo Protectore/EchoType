@@ -11,9 +11,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTime
 
 from GUIClient.Widgets import TimerLabel, AudioVisualizer
 from GUIClient.utility import GuiUtility
-from config_manager import ConfigManager
-
-from logger import get_logger
+from Utility import ConfigManager, get_logger
 
 
 logger  = get_logger(__name__)

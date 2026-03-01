@@ -8,7 +8,7 @@ from pynput.keyboard import Key, KeyCode
 from Client.HotkeyManager.hotkey_action import HotkeyAction
 from Client.HotkeyManager.hotkey_mode import HotkeyMode 
 from Client.HotkeyManager.hotkey_state import HotkeyState
-from logger import get_logger
+from Utility import get_logger
 
 
 logger = get_logger(__name__)

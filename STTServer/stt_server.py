@@ -7,9 +7,7 @@ import os
 import logging
 from typing import Optional
 
-from config_manager import ConfigManager
-
-from logger import get_logger
+from Utility import ConfigManager, get_logger
 
 
 class STTServer:

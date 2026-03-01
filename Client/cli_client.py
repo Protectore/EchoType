@@ -7,7 +7,7 @@ import time
 import threading
 import queue
 
-from config_manager import ConfigManager
+from Utility import ConfigManager
 from Client.AudioRecorder import AudioData
 from Client.client import Client
 

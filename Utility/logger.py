@@ -13,6 +13,7 @@ def get_logger(name, log_file_name="EchoType.log"):
 
     # Log file handler
     file_handler = logging.FileHandler(log_file_name, encoding="utf-8")
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
     logger.addHandler(file_handler)
 
 

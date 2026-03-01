@@ -2,7 +2,7 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QColor, QPainter, QPen
 
-from logger import get_logger
+from Utility import get_logger
 
 
 logger  = get_logger(__name__)

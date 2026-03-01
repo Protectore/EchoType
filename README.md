@@ -176,3 +176,7 @@ Press the key to start recording. Press again to stop.
 
 MIT
 
+## Support
+
+You can support project/developer on [DonationAlerts](https://www.donationalerts.com/r/protectoreh). Thank you!
+

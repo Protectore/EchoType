@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QFrame, QApplication
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
+from PyQt6.QtCore import QAbstractAnimation, Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
 
 from GUIClient.Widgets import TimerLabel, AudioVisualizer
 from GUIClient.utility import GuiUtility
@@ -159,7 +159,9 @@ class PopupWindow(QWidget):
         logger.debug("Showing popup window")
         self._init_position()
         self.fade_out_delay_timer.stop()
-        self.fade_out_animation.stop()
+        if self.fade_out_animation.state() == QAbstractAnimation.State.Running:
+            self.fade_out_animation.stop()
+            self.setWindowOpacity(1.0)
         if not self.isVisible():
             self.fade_in()
         logger.debug("Popup window is shown")

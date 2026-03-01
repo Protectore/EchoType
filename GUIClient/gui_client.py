@@ -144,7 +144,7 @@ class GUIClient(QObject):
     
     def _on_audio_update(self, indata: np.ndarray, audio_data: AudioData):
         """При обновлении аудио"""
-        if self.config.show_popup() and self.config.show_visualizer():
+        if self.config.show_popup():
             level = float(np.abs(indata).mean())
             self.popup.add_audio_level(level)
     
@@ -191,10 +191,9 @@ class GUIClient(QObject):
         self.client.hotkey_manager.start()
         self.tray.show()
         
-        if not self.config.start_minimized():
-            self.tray.show_message(
-                "EchoType запущен",
-                "Нажмите горячую клавишу для записи"
-            )
+        self.tray.show_message(
+            "EchoType запущен",
+            "Нажмите горячую клавишу для записи"
+        )
         
         return self.app.exec() # type: ignore

@@ -91,7 +91,6 @@ class SettingsWindow(QDialog):
         info_label = QLabel(
             "💡 Toggle: одно нажатие начинает запись, повторное - останавливает.\n"
             "💡 Push-to-Talk: запись идёт пока клавиша нажата.\n"
-            "⚠️ Инвалидность pyqt не позволяет ему различать левый альт от правого, но под капотом оно работает! Т.е. при нажатии alt_gr, на экране будет написано alt, но обработка будет повешена именно на правый альт"
         )
         info_label.setStyleSheet("color: #888; font-size: 11px;")
         info_label.setWordWrap(True)
@@ -196,28 +195,7 @@ class SettingsWindow(QDialog):
         self.show_popup_check = QCheckBox("Показывать при записи")
         form.addRow(self.show_popup_check)
         
-        self.show_timer_check = QCheckBox("Показывать таймер")
-        form.addRow(self.show_timer_check)
-        
-        self.show_visualizer_check = QCheckBox("Показывать визуализацию")
-        form.addRow(self.show_visualizer_check)
-        
         layout.addWidget(popup_group)
-        
-        # Поведение
-        behavior_group = QGroupBox("Поведение")
-        form = QFormLayout(behavior_group)
-        
-        self.minimize_to_tray_check = QCheckBox("Сворачивать в трей при закрытии")
-        form.addRow(self.minimize_to_tray_check)
-        
-        self.start_minimized_check = QCheckBox("Запускать свернутым")
-        form.addRow(self.start_minimized_check)
-        
-        self.autostart_check = QCheckBox("Автозапуск при старте системы")
-        form.addRow(self.autostart_check)
-        
-        layout.addWidget(behavior_group)
         
         layout.addStretch()
         return widget
@@ -281,9 +259,7 @@ class SettingsWindow(QDialog):
         """Загрузить настройки в UI"""
         # Горячие клавиши
         record_keys = self.config.get_hotkey_keys('record')
-        self.record_hotkey_edit.setKeySequence(
-            QKeySequence(record_keys.replace("_", "+"))
-        )
+        self.record_hotkey_edit.setHotkeyFromString(record_keys)
         
         record_mode = self.config.get_hotkey_mode('record')
         self.record_mode_combo.setCurrentIndex(0 if record_mode == 'toggle' else 1)
@@ -315,12 +291,6 @@ class SettingsWindow(QDialog):
         
         # GUI
         self.show_popup_check.setChecked(self.config.show_popup())
-
-        self.show_timer_check.setChecked(self.config.show_timer())
-        self.show_visualizer_check.setChecked(self.config.show_visualizer())
-        self.minimize_to_tray_check.setChecked(self.config.minimize_to_tray())
-        self.start_minimized_check.setChecked(self.config.start_minimized())
-        self.autostart_check.setChecked(self.config.is_autostart_enabled())
         
         # Сервер
         self.server_host_edit.setText(self.config.get_server_host())
@@ -358,12 +328,6 @@ class SettingsWindow(QDialog):
         
         # GUI
         self.config.set('gui.show_popup', self.show_popup_check.isChecked())
-        
-        self.config.set('gui.show_timer', self.show_timer_check.isChecked())
-        self.config.set('gui.show_visualizer', self.show_visualizer_check.isChecked())
-        self.config.set('gui.minimize_to_tray', self.minimize_to_tray_check.isChecked())
-        self.config.set('gui.start_minimized', self.start_minimized_check.isChecked())
-        self.config.set('gui.autostart', self.autostart_check.isChecked())
         
         # Сервер
         self.config.set('server.host', self.server_host_edit.text())

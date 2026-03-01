@@ -144,7 +144,7 @@ class GUIClient(QObject):
     
     def _on_audio_update(self, indata: np.ndarray, audio_data: AudioData):
         """При обновлении аудио"""
-        if self.config.show_popup() and self.config.show_visualizer():
+        if self.config.show_popup():
             level = float(np.abs(indata).mean())
             self.popup.add_audio_level(level)
     

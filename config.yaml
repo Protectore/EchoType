@@ -12,8 +12,6 @@ gui:
   minimize_to_tray: true
   popup_position: center
   show_popup: true
-  show_timer: true
-  show_visualizer: true
   start_minimized: false
 hotkeys:
   record:

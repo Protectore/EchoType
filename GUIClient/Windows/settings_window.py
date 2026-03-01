@@ -196,12 +196,6 @@ class SettingsWindow(QDialog):
         self.show_popup_check = QCheckBox("Показывать при записи")
         form.addRow(self.show_popup_check)
         
-        self.show_timer_check = QCheckBox("Показывать таймер")
-        form.addRow(self.show_timer_check)
-        
-        self.show_visualizer_check = QCheckBox("Показывать визуализацию")
-        form.addRow(self.show_visualizer_check)
-        
         layout.addWidget(popup_group)
         
         # Поведение
@@ -316,8 +310,6 @@ class SettingsWindow(QDialog):
         # GUI
         self.show_popup_check.setChecked(self.config.show_popup())
 
-        self.show_timer_check.setChecked(self.config.show_timer())
-        self.show_visualizer_check.setChecked(self.config.show_visualizer())
         self.minimize_to_tray_check.setChecked(self.config.minimize_to_tray())
         self.start_minimized_check.setChecked(self.config.start_minimized())
         self.autostart_check.setChecked(self.config.is_autostart_enabled())
@@ -359,8 +351,6 @@ class SettingsWindow(QDialog):
         # GUI
         self.config.set('gui.show_popup', self.show_popup_check.isChecked())
         
-        self.config.set('gui.show_timer', self.show_timer_check.isChecked())
-        self.config.set('gui.show_visualizer', self.show_visualizer_check.isChecked())
         self.config.set('gui.minimize_to_tray', self.minimize_to_tray_check.isChecked())
         self.config.set('gui.start_minimized', self.start_minimized_check.isChecked())
         self.config.set('gui.autostart', self.autostart_check.isChecked())

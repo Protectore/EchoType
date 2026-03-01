@@ -224,14 +224,6 @@ class ConfigManager:
         """Показывать ли popup при записи"""
         return self.get('gui.show_popup', True)
     
-    def show_timer(self) -> bool:
-        """Показывать ли таймер записи"""
-        return self.get('gui.show_timer', True)
-    
-    def show_visualizer(self) -> bool:
-        """Показывать ли визуализацию аудио"""
-        return self.get('gui.show_visualizer', True)
-    
     def minimize_to_tray(self) -> bool:
         """Сворачивать ли в трей при закрытии"""
         return self.get('gui.minimize_to_tray', True)

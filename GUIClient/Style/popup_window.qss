@@ -36,12 +36,44 @@ QFrame#line_separator {
     max-height: 1px;
 }
 
+/* ScrollArea для текста */
+QScrollArea#text_scroll {
+    background-color: transparent;
+    border: none;
+}
+
+QScrollArea#text_scroll > QWidget > QWidget {
+    background-color: transparent;
+}
+
+/* Кастомизация скроллбара */
+QScrollArea#text_scroll QScrollBar:vertical {
+    background-color: #3D3D3D;
+    width: 6px;
+    border-radius: 3px;
+    margin: 0;
+}
+
+QScrollArea#text_scroll QScrollBar::handle:vertical {
+    background-color: #5D5D5D;
+    border-radius: 3px;
+    min-height: 20px;
+}
+
+QScrollArea#text_scroll QScrollBar::handle:vertical:hover {
+    background-color: #7D7D7D;
+}
+
+QScrollArea#text_scroll QScrollBar::add-line:vertical,
+QScrollArea#text_scroll QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
 /* Превью текста */
 QLabel#text_preview {
     color: #AAA;
     font-family: "Segoe UI";
     font-size: 10pt;
-    max-height: 40px;
 }
 
 QLabel#text_preview.ready {

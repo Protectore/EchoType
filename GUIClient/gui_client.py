@@ -123,7 +123,7 @@ class GUIClient(QObject):
 
         def thread_func():
             text = self.client.process_recording(audio_data)
-            if text:
+            if self.config.show_popup() and text:
                 self.popup.set_result(text)
             self.tray.set_status(TrayStatus.READY)
             self.processing_thread.quit()

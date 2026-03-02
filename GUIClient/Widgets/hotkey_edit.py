@@ -53,6 +53,7 @@ class HotkeyEdit(QKeySequenceEdit):
         
         extra_solo_keys = [Qt.Key.Key_Alt, Qt.Key.Key_Control, Qt.Key.Key_Shift]
         
+        exception_key = None
         if key in extra_solo_keys:
             if sys.platform == 'win32':
                 native_key = event.nativeScanCode()
@@ -60,13 +61,11 @@ class HotkeyEdit(QKeySequenceEdit):
                 logger.debug(f"{key=}, {native_key=}")
                 
                 if native_key in [56, 57400]:
-                    exception_key = None
                     # ALT
                     if native_key == 56:
                         exception_key = "alt_l"
                     elif native_key == 57400:
                         exception_key = "alt_gr"
-                    self.exception_key = exception_key
                     self._setDisplayText(SPECIAL_KEY_DISPLAY[exception_key]) # type: ignore
                 else:
                     self.setKeySequence(QKeySequence(key))
@@ -77,6 +76,8 @@ class HotkeyEdit(QKeySequenceEdit):
             event.accept()
         else:
             super().keyPressEvent(event)
+        
+        self.exception_key = exception_key
     
     def get_hotkey_string(self) -> str:
         """Получить строковое представление горячей клавиши"""

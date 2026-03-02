@@ -7,6 +7,9 @@ from Utility import get_logger
 logger = get_logger(__name__)
 
 
+EXTRA_ACTIVE_CHARACTERS = "',./-+*"
+
+
 @dataclass
 class HotkeyState:
     """Состояние отслеживания клавиш. Хранит в себе текущие нажатые клавиши"""
@@ -18,7 +21,7 @@ class HotkeyState:
         logger.debug(f"Добавлена клавиша {key} ({type(key)}), текущее состояние: {self.pressed_keys}")
         if isinstance(key, keyboard.KeyCode) and key.char:
             # Скипаем управляющие символы (Ctrl+A и т.д.)
-            if not key.char.isalnum() or key.char.isupper():
+            if not key.char.isalnum() or key.char.isupper() or key.char not in EXTRA_ACTIVE_CHARACTERS:
                 logger.debug(f"Skipped {key.char=}")
                 return
 

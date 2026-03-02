@@ -131,10 +131,10 @@ uv sync
 
 ```bash
 # Start the server
-uv run python main.py
+uv run main.py
 
 # Start the GUI client (in another terminal)
-uv run python gui_client.py
+uv run gui_client.py
 ```
 
 ### Configuration
@@ -179,5 +179,6 @@ MIT
 ## Support
 
 You can support project/developer on [DonationAlerts](https://www.donationalerts.com/r/protectoreh). Thank you!
+
 
 

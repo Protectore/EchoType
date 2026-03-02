@@ -19,9 +19,9 @@ class HotkeyState:
     def add_key(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         """Добавить клавишу к текущим нажатым клавишам"""
         logger.debug(f"Добавлена клавиша {key} ({type(key)}), текущее состояние: {self.pressed_keys}")
-        if isinstance(key, keyboard.KeyCode) and key.char:
+        if isinstance(key, keyboard.KeyCode) and key.char and key.char not in EXTRA_ACTIVE_CHARACTERS:
             # Скипаем управляющие символы (Ctrl+A и т.д.)
-            if not key.char.isalnum() or key.char.isupper() or key.char not in EXTRA_ACTIVE_CHARACTERS:
+            if not key.char.isalnum() or key.char.isupper():
                 logger.debug(f"Skipped {key.char=}")
                 return
 

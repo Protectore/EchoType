@@ -25,6 +25,7 @@ class Client:
     
     def __init__(self, config: ConfigManager):
         self.config = config
+        self.hotkey_manager: Optional[HotkeyManager] = None
         
         # Инициализируем компоненты
         self._init_audio_recorder()
@@ -63,6 +64,9 @@ class Client:
         
     def init_hotkey_manager(self):
         """Инициализация менеджера горячих клавиш"""
+        while hasattr(self, 'hotkey_manager'):
+            del self.hotkey_manager
+
         self.hotkey_manager = HotkeyManager()
         
         record_keys = self.config.get_hotkey_keys('record')
@@ -172,12 +176,14 @@ class Client:
         
         if self.output_mode in ["typein", "both"]:
             logger.info("⌨️ Текст отправлен в ввод")
-            self.hotkey_manager.stop()
+            if self.hotkey_manager:
+                self.hotkey_manager.stop()
             self.keyboard.type(text)
             
             if self.auto_paste:
                 self.keyboard.tap(keyboard.Key.enter)
-            self.hotkey_manager.start()
+            if self.hotkey_manager:
+                self.hotkey_manager.start()
         
         return text
     
@@ -186,4 +192,5 @@ class Client:
         if self.audio_recorder.is_recording:
             self.audio_recorder.stop_recording()
         
-        self.hotkey_manager.stop()
+        if self.hotkey_manager:
+            self.hotkey_manager.stop()
